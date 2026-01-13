@@ -152,8 +152,122 @@ import { Button, Card } from '@repo/ui';
 | `@repo/types`             | Types TypeScript partagés |
 | `@repo/utils`             | Fonctions utilitaires     |
 | `@repo/ui`                | Composants React          |
+| `@repo/logger`            | Logger avec niveaux       |
+| `@repo/cache`             | Cache in-memory avec TTL  |
+| `@repo/constants`         | Constantes partagées      |
+| `@repo/result`            | Try/catch fonctionnel     |
 | `@repo/eslint-config`     | Configuration ESLint      |
 | `@repo/typescript-config` | Configuration TypeScript  |
+
+### Exemples d'utilisation
+
+#### Types
+
+```typescript
+import type { User, ApiResponse, PaginatedResponse } from '@repo/types';
+
+const user: User = { id: '1', name: 'John', email: 'john@example.com' };
+
+const response: ApiResponse<User> = {
+  success: true,
+  data: user,
+};
+```
+
+#### Utils
+
+```typescript
+import { capitalize, slugify, truncate, chunk, isEmpty } from '@repo/utils';
+
+capitalize('hello'); // "Hello"
+slugify('Hello World'); // "hello-world"
+truncate('Long text here', 10); // "Long te..."
+chunk([1, 2, 3, 4, 5], 2); // [[1, 2], [3, 4], [5]]
+isEmpty({}); // true
+```
+
+#### UI
+
+```tsx
+import { Button, Card, Input } from '@repo/ui';
+
+<Button variant="primary" onClick={handleClick}>
+  Click me
+</Button>
+
+<Card title="Card Title">
+  Content here
+</Card>
+
+<Input placeholder="Enter text" value={value} onChange={onChange} />
+```
+
+#### Logger
+
+```typescript
+import { logger, createLogger } from '@repo/logger';
+
+logger.info('Application started');
+logger.error('Something went wrong', { error });
+
+const appLogger = createLogger({ prefix: 'api', level: 'debug' });
+appLogger.debug('Request received');
+```
+
+#### Cache
+
+```typescript
+import { createCache, memoize } from '@repo/cache';
+
+const cache = createCache<User>({ ttl: 60000, maxSize: 100 });
+cache.set('user:1', user);
+const cached = cache.get('user:1');
+
+// Memoization
+const expensiveFn = memoize(async (id: string) => fetchUser(id), { ttl: 5000 });
+```
+
+#### Constants
+
+```typescript
+import { HTTP_STATUS, ERROR_CODE, USER_ROLE, REGEX } from '@repo/constants';
+
+if (response.status === HTTP_STATUS.NOT_FOUND) {
+  // Handle 404
+}
+
+if (REGEX.EMAIL.test(email)) {
+  // Valid email
+}
+```
+
+#### Result
+
+```typescript
+import { tryCatch, tryCatchAsync, ok, err, match, unwrapOr } from '@repo/result';
+
+// Sync
+const result = tryCatch(() => JSON.parse(data));
+if (result.ok) {
+  console.log(result.data);
+} else {
+  console.error(result.error);
+}
+
+// Async
+const userResult = await tryCatchAsync(() => fetchUser(id));
+const user = unwrapOr(userResult, defaultUser);
+
+// Pattern matching
+const message = match(result, {
+  ok: data => `Success: ${data}`,
+  err: error => `Error: ${error.message}`,
+});
+
+// Wrap existing functions
+const safeParseJSON = wrap(JSON.parse);
+const parsed = safeParseJSON('{"name": "John"}');
+```
 
 ## Workflow Git
 
