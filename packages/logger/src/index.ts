@@ -1,9 +1,23 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
+
+export interface LogContext {
+  [key: string]: unknown;
+}
 
 export interface LoggerOptions {
   level?: LogLevel;
   prefix?: string;
   timestamp?: boolean;
+  colors?: boolean;
+  json?: boolean;
+}
+
+interface LogEntry {
+  timestamp: string;
+  level: LogLevel;
+  message: string;
+  prefix?: string;
+  context?: LogContext;
 }
 
 const LOG_LEVELS: Record<LogLevel, number> = {
@@ -11,9 +25,10 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   info: 1,
   warn: 2,
   error: 3,
+  silent: 4,
 };
 
-const LOG_COLORS: Record<LogLevel, string> = {
+const LOG_COLORS: Record<Exclude<LogLevel, 'silent'>, string> = {
   debug: '\x1b[36m', // cyan
   info: '\x1b[32m', // green
   warn: '\x1b[33m', // yellow
@@ -21,33 +36,49 @@ const LOG_COLORS: Record<LogLevel, string> = {
 };
 
 const RESET = '\x1b[0m';
+const DIM = '\x1b[2m';
+const BOLD = '\x1b[1m';
 
 export class Logger {
   private level: LogLevel;
   private prefix: string;
-  private timestamp: boolean;
+  private showTimestamp: boolean;
+  private useColors: boolean;
+  private jsonOutput: boolean;
 
   constructor(options: LoggerOptions = {}) {
     this.level = options.level ?? 'info';
     this.prefix = options.prefix ?? '';
-    this.timestamp = options.timestamp ?? true;
+    this.showTimestamp = options.timestamp ?? true;
+    this.useColors = options.colors ?? true;
+    this.jsonOutput = options.json ?? false;
   }
 
   private shouldLog(level: LogLevel): boolean {
     return LOG_LEVELS[level] >= LOG_LEVELS[this.level];
   }
 
-  private formatMessage(level: LogLevel, message: string): string {
+  private formatJson(entry: LogEntry): string {
+    return JSON.stringify(entry);
+  }
+
+  private formatPretty(level: Exclude<LogLevel, 'silent'>, message: string): string {
     const parts: string[] = [];
 
-    if (this.timestamp) {
-      parts.push(`[${new Date().toISOString()}]`);
+    if (this.showTimestamp) {
+      const time = new Date().toISOString();
+      parts.push(this.useColors ? `${DIM}[${time}]${RESET}` : `[${time}]`);
     }
 
-    parts.push(`${LOG_COLORS[level]}[${level.toUpperCase()}]${RESET}`);
+    const levelTag = `[${level.toUpperCase()}]`;
+    if (this.useColors) {
+      parts.push(`${LOG_COLORS[level]}${BOLD}${levelTag}${RESET}`);
+    } else {
+      parts.push(levelTag);
+    }
 
     if (this.prefix) {
-      parts.push(`[${this.prefix}]`);
+      parts.push(this.useColors ? `${DIM}[${this.prefix}]${RESET}` : `[${this.prefix}]`);
     }
 
     parts.push(message);
@@ -55,40 +86,105 @@ export class Logger {
     return parts.join(' ');
   }
 
-  debug(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('debug')) {
-      // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      console.debug(this.formatMessage('debug', message), ...args);
+  private log(level: Exclude<LogLevel, 'silent'>, message: string, context?: LogContext): void {
+    if (!this.shouldLog(level)) return;
+
+    const consoleMethod =
+      level === 'debug' ? 'debug' : level === 'info' ? 'info' : level === 'warn' ? 'warn' : 'error';
+
+    if (this.jsonOutput) {
+      const entry: LogEntry = {
+        timestamp: new Date().toISOString(),
+        level,
+        message,
+        ...(this.prefix && { prefix: this.prefix }),
+        ...(context && { context }),
+      };
+      // eslint-disable-next-line no-console
+      console[consoleMethod](this.formatJson(entry));
+    } else {
+      const formatted = this.formatPretty(level, message);
+      if (context) {
+        // eslint-disable-next-line no-console
+        console[consoleMethod](formatted, context);
+      } else {
+        // eslint-disable-next-line no-console
+        console[consoleMethod](formatted);
+      }
     }
   }
 
-  info(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('info')) {
-      // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      console.info(this.formatMessage('info', message), ...args);
-    }
+  debug(message: string, context?: LogContext): void {
+    this.log('debug', message, context);
   }
 
-  warn(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('warn')) {
-      // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      console.warn(this.formatMessage('warn', message), ...args);
-    }
+  info(message: string, context?: LogContext): void {
+    this.log('info', message, context);
   }
 
-  error(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('error')) {
-      // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      console.error(this.formatMessage('error', message), ...args);
-    }
+  warn(message: string, context?: LogContext): void {
+    this.log('warn', message, context);
+  }
+
+  error(message: string, context?: LogContext): void {
+    this.log('error', message, context);
   }
 
   child(prefix: string): Logger {
     return new Logger({
       level: this.level,
       prefix: this.prefix ? `${this.prefix}:${prefix}` : prefix,
-      timestamp: this.timestamp,
+      timestamp: this.showTimestamp,
+      colors: this.useColors,
+      json: this.jsonOutput,
     });
+  }
+
+  setLevel(level: LogLevel): void {
+    this.level = level;
+  }
+
+  getLevel(): LogLevel {
+    return this.level;
+  }
+
+  isLevelEnabled(level: LogLevel): boolean {
+    return this.shouldLog(level);
+  }
+
+  time(label: string): () => void {
+    const start = performance.now();
+    return () => {
+      const duration = performance.now() - start;
+      this.debug(`${label} completed`, { durationMs: Math.round(duration * 100) / 100 });
+    };
+  }
+
+  async timeAsync<T>(label: string, fn: () => Promise<T>): Promise<T> {
+    const end = this.time(label);
+    try {
+      return await fn();
+    } finally {
+      end();
+    }
+  }
+
+  group(label: string): void {
+    if (!this.shouldLog('debug')) return;
+    // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    console.group(this.formatPretty('debug', label));
+  }
+
+  groupEnd(): void {
+    if (!this.shouldLog('debug')) return;
+    // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    console.groupEnd();
+  }
+
+  table(data: unknown): void {
+    if (!this.shouldLog('debug')) return;
+    // eslint-disable-next-line no-console, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    console.table(data);
   }
 }
 
