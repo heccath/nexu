@@ -21,5 +21,6 @@ module.exports = {
     ],
     'subject-case': [2, 'always', 'lower-case'],
     'subject-max-length': [2, 'always', 100],
+    'body-max-line-length': [0, 'always', Infinity],
   },
 };

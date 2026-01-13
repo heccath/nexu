@@ -2,6 +2,4 @@
 # Each app has its own docker-compose.yml in apps/<app-name>/
 # Run: pnpm generate:app <name> <port> to add a new app
 
-include:
-  - path: ../apps/frontend/docker-compose.yml
-  - path: ../apps/backend/docker-compose.yml
+include: []
