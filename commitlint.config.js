@@ -16,6 +16,7 @@ module.exports = {
         'ci', // Changements CI
         'chore', // Maintenance
         'revert', // Annulation
+        'build', // Changements de build
       ],
     ],
     'subject-case': [2, 'always', 'lower-case'],

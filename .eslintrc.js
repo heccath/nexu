@@ -53,5 +53,14 @@ module.exports = {
     'prefer-const': 'error',
     'no-var': 'error',
   },
-  ignorePatterns: ['node_modules', 'dist', '.next', 'coverage', '*.config.js', '*.config.mjs'],
+  ignorePatterns: [
+    'node_modules',
+    'dist',
+    '.next',
+    'coverage',
+    '*.config.js',
+    '*.config.mjs',
+    '.eslintrc.js',
+    'commitlint.config.js',
+  ],
 };

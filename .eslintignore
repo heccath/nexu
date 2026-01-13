@@ -1,0 +1,13 @@
+# Config files (not part of TypeScript project)
+.eslintrc.js
+commitlint.config.js
+*.config.js
+*.config.mjs
+*.config.ts
+packages/config/**
+
+# Build outputs
+node_modules
+dist
+.next
+coverage
