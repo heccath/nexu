@@ -1,7 +1,6 @@
 {
   "name": "nexu",
   "version": "1.0.0",
-  "private": true,
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "build": "turbo build",
@@ -19,6 +18,8 @@
     "docker:build": "docker-compose -f docker/docker-compose.prod.yml build",
     "docker:prod": "docker-compose -f docker/docker-compose.prod.yml up -d",
     "generate:app": "./scripts/generate-app.sh",
+    "generate:template": "./scripts/generate-template.sh",
+    "publish:cli": "./scripts/publish-cli.sh",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "changeset publish"
@@ -42,14 +43,5 @@
     "turbo": "^2.7.5",
     "typescript": "^5.4.0",
     "vitest": "^2.0.0"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ]
   }
 }

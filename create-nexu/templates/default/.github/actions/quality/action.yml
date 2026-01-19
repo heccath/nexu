@@ -1,0 +1,53 @@
+name: 'Quality Check'
+description: 'Run lint, format, typecheck, and tests'
+
+inputs:
+  turbo-token:
+    description: 'Turbo remote cache token'
+    required: false
+  turbo-team:
+    description: 'Turbo team name'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Lint
+      shell: bash
+      run: pnpm lint
+      env:
+        TURBO_TOKEN: ${{ inputs.turbo-token }}
+        TURBO_TEAM: ${{ inputs.turbo-team }}
+
+    - name: Format Check
+      shell: bash
+      run: pnpm format:check
+
+    - name: Type Check
+      shell: bash
+      run: pnpm typecheck
+      env:
+        TURBO_TOKEN: ${{ inputs.turbo-token }}
+        TURBO_TEAM: ${{ inputs.turbo-team }}
+
+    - name: Test
+      shell: bash
+      run: pnpm test
+      env:
+        TURBO_TOKEN: ${{ inputs.turbo-token }}
+        TURBO_TEAM: ${{ inputs.turbo-team }}
