@@ -30,6 +30,11 @@ nexu/
 │   ├── types/              # Types partagés
 │   ├── utils/              # Utilitaires
 │   └── ui/                 # Composants UI
+├── services/                # Services Docker externes
+│   ├── docker-compose.yml  # Config avec profiles
+│   ├── postgres/           # Config PostgreSQL
+│   ├── prometheus/         # Config Prometheus
+│   └── grafana/            # Config Grafana
 ├── docker/
 │   └── docker-compose.yml  # Compose principal (inclut toutes les apps)
 └── scripts/
@@ -112,6 +117,43 @@ docker compose -f docker-compose.prod.yml up -d
 pnpm docker:dev   # Dev
 pnpm docker:prod  # Prod
 ```
+
+### Services externes
+
+Les services externes (PostgreSQL, Redis, etc.) sont gérés dans le dossier `services/`.
+
+```bash
+# Démarrer les services de base de données
+docker compose -f services/docker-compose.yml --profile database up -d
+
+# Démarrer tous les services
+docker compose -f services/docker-compose.yml --profile all up -d
+
+# Arrêter les services
+docker compose -f services/docker-compose.yml --profile database down
+```
+
+**Profiles disponibles:**
+
+| Profile      | Services                   |
+| ------------ | -------------------------- |
+| `database`   | PostgreSQL, Redis          |
+| `messaging`  | RabbitMQ, Kafka, Zookeeper |
+| `monitoring` | Prometheus, Grafana        |
+| `storage`    | MinIO (S3-compatible)      |
+| `search`     | Elasticsearch              |
+| `all`        | Tous les services          |
+
+**Interfaces web:**
+
+| Service    | URL                    | Credentials     |
+| ---------- | ---------------------- | --------------- |
+| RabbitMQ   | http://localhost:15672 | nexu / nexu     |
+| Grafana    | http://localhost:3001  | admin / admin   |
+| MinIO      | http://localhost:9001  | nexu / nexu1234 |
+| Prometheus | http://localhost:9090  | -               |
+
+Voir [services/README.md](services/README.md) pour plus de détails.
 
 ## Packages partagés
 
