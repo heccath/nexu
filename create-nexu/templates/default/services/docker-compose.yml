@@ -1,0 +1,207 @@
+version: '3.8'
+
+# Base docker-compose for external services
+# Usage: docker compose -f services/docker-compose.yml --profile <profile> up -d
+#
+# Available profiles:
+#   - database: PostgreSQL, Redis
+#   - messaging: RabbitMQ, Kafka
+#   - monitoring: Prometheus, Grafana
+#   - storage: MinIO (S3-compatible)
+#   - search: Elasticsearch
+#   - all: All services
+
+networks:
+  nexu-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  kafka_data:
+  zookeeper_data:
+  prometheus_data:
+  grafana_data:
+  minio_data:
+  elasticsearch_data:
+
+services:
+  # ============================================
+  # DATABASE SERVICES
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexu-postgres
+    profiles: ['database', 'all']
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nexu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexu}
+      POSTGRES_DB: ${POSTGRES_DB:-nexu}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - nexu-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-nexu}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: nexu-redis
+    profiles: ['database', 'all']
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - nexu-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # MESSAGING SERVICES
+  # ============================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: nexu-rabbitmq
+    profiles: ['messaging', 'all']
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-nexu}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-nexu}
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - nexu-network
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: nexu-zookeeper
+    profiles: ['messaging', 'all']
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - '2181:2181'
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    networks:
+      - nexu-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: nexu-kafka
+    profiles: ['messaging', 'all']
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - '9092:9092'
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - nexu-network
+
+  # ============================================
+  # MONITORING SERVICES
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nexu-prometheus
+    profiles: ['monitoring', 'all']
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - nexu-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nexu-grafana
+    profiles: ['monitoring', 'all']
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    ports:
+      - '3001:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - nexu-network
+    depends_on:
+      - prometheus
+
+  # ============================================
+  # STORAGE SERVICES
+  # ============================================
+  minio:
+    image: minio/minio:latest
+    container_name: nexu-minio
+    profiles: ['storage', 'all']
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-nexu}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-nexu1234}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    networks:
+      - nexu-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ============================================
+  # SEARCH SERVICES
+  # ============================================
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: nexu-elasticsearch
+    profiles: ['search', 'all']
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - nexu-network
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -s http://localhost:9200 | grep -q "cluster_name"']
+      interval: 30s
+      timeout: 10s
+      retries: 5

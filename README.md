@@ -6,10 +6,13 @@ Monorepo moderne avec Turborepo, pnpm et Docker.
 
 ```bash
 # Créer un nouveau projet
-npx create-nexu init my-project
+npm create nexu my-project
 cd my-project
 
-# Ou mettre à jour un projet existant
+# Ou avec npx
+npx create-nexu my-project
+
+# Mettre à jour un projet existant
 npx create-nexu update
 ```
 
@@ -46,10 +49,15 @@ nexu/
 │   ├── postgres/           # Config PostgreSQL
 │   ├── prometheus/         # Config Prometheus
 │   └── grafana/            # Config Grafana
+├── create-nexu/             # CLI create-nexu
+│   ├── src/                # Source du CLI
+│   └── templates/          # Templates du monorepo
 ├── docker/
 │   └── docker-compose.yml  # Compose principal (inclut toutes les apps)
 └── scripts/
-    └── generate-app.sh     # Générateur d'apps
+    ├── generate-app.sh     # Générateur d'apps
+    ├── generate-template.sh # Génère le template CLI
+    └── publish-cli.sh      # Publie le CLI sur npm
 ```
 
 ## Installation
@@ -57,16 +65,19 @@ nexu/
 ### Option 1: Via CLI (recommandé)
 
 ```bash
-npx create-nexu init my-project
+npm create nexu my-project
 cd my-project
+pnpm dev
 ```
+
+Le CLI vous permet de sélectionner les packages et features à inclure.
 
 ### Option 2: Clone manuel
 
 ```bash
 git clone https://github.com/heccath/nexu.git my-project
 cd my-project
-rm -rf .git
+rm -rf .git create-nexu
 git init
 pnpm install
 pnpm build
@@ -100,19 +111,21 @@ L'app est automatiquement ajoutée au `docker/docker-compose.yml` principal.
 
 ## Commandes
 
-| Commande                | Description             |
-| ----------------------- | ----------------------- |
-| `pnpm dev`              | Développement           |
-| `pnpm build`            | Build                   |
-| `pnpm lint`             | Vérifier le code        |
-| `pnpm lint:fix`         | Corriger le code        |
-| `pnpm format`           | Formater                |
-| `pnpm typecheck`        | Vérifier les types      |
-| `pnpm test`             | Tests                   |
-| `pnpm clean`            | Nettoyer                |
-| `pnpm generate:app`     | Créer une app           |
-| `pnpm changeset`        | Créer un changeset      |
-| `pnpm version-packages` | Versionner les packages |
+| Commande                 | Description             |
+| ------------------------ | ----------------------- |
+| `pnpm dev`               | Développement           |
+| `pnpm build`             | Build                   |
+| `pnpm lint`              | Vérifier le code        |
+| `pnpm lint:fix`          | Corriger le code        |
+| `pnpm format`            | Formater                |
+| `pnpm typecheck`         | Vérifier les types      |
+| `pnpm test`              | Tests                   |
+| `pnpm clean`             | Nettoyer                |
+| `pnpm generate:app`      | Créer une app           |
+| `pnpm generate:template` | Générer le template CLI |
+| `pnpm publish:cli`       | Publier le CLI sur npm  |
+| `pnpm changeset`         | Créer un changeset      |
+| `pnpm version-packages`  | Versionner les packages |
 
 ### Filtrer par package
 
@@ -430,4 +443,48 @@ chore:    Maintenance
 ```bash
 git commit -m "feat: add user authentication"
 git commit -m "fix: resolve login redirect issue"
+```
+
+## CLI create-nexu
+
+Le CLI `create-nexu` permet de créer et mettre à jour des projets Nexu.
+
+### Installation
+
+```bash
+# Créer un nouveau projet
+npm create nexu my-project
+
+# Ou avec npx
+npx create-nexu my-project
+```
+
+### Commandes
+
+```bash
+# Créer un projet (interactif)
+npx create-nexu my-project
+
+# Options disponibles
+npx create-nexu my-project --skip-install  # Ne pas installer les dépendances
+npx create-nexu my-project --skip-git      # Ne pas initialiser git
+
+# Mettre à jour un projet existant
+npx create-nexu update
+
+# Ajouter un package
+npx create-nexu add package
+
+# Ajouter des services Docker
+npx create-nexu add service
+```
+
+### Développement du CLI
+
+```bash
+# Générer le template depuis le monorepo
+pnpm generate:template
+
+# Publier sur npm
+pnpm publish:cli
 ```
