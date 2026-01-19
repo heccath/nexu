@@ -2,6 +2,17 @@
 
 Monorepo moderne avec Turborepo, pnpm et Docker.
 
+## Démarrage rapide
+
+```bash
+# Créer un nouveau projet
+npx create-nexu init my-project
+cd my-project
+
+# Ou mettre à jour un projet existant
+npx create-nexu update
+```
+
 ## Stack
 
 - **Turborepo** - Orchestration monorepo + remote caching
@@ -43,7 +54,20 @@ nexu/
 
 ## Installation
 
+### Option 1: Via CLI (recommandé)
+
 ```bash
+npx create-nexu init my-project
+cd my-project
+```
+
+### Option 2: Clone manuel
+
+```bash
+git clone https://github.com/heccath/nexu.git my-project
+cd my-project
+rm -rf .git
+git init
 pnpm install
 pnpm build
 ```
