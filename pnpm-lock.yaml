@@ -126,7 +126,7 @@ importers:
   packages/logger:
     devDependencies:
       '@types/node':
-        specifier: ^25.0.8
+        specifier: ^25.0.9
         version: 25.0.9
       tsup:
         specifier: ^8.0.0
@@ -3692,7 +3692,7 @@ snapshots:
 
   '@types/conventional-commits-parser@5.0.2':
     dependencies:
-      '@types/node': 20.19.28
+      '@types/node': 25.0.9
 
   '@types/estree@1.0.8': {}
 
@@ -3710,7 +3710,7 @@ snapshots:
 
   '@types/jsonfile@6.1.4':
     dependencies:
-      '@types/node': 20.19.28
+      '@types/node': 25.0.9
 
   '@types/node@12.20.55': {}
 
@@ -3734,7 +3734,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 20.19.28
+      '@types/node': 25.0.9
 
   '@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
