@@ -28,12 +28,7 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      className={`
-        rounded-lg
-        ${variantStyles[variant]}
-        ${paddingStyles[padding]}
-        ${className}
-      `}
+      className={`rounded-lg ${variantStyles[variant]} ${paddingStyles[padding]} ${className} `}
       {...props}
     >
       {children}
