@@ -8,7 +8,13 @@ import inquirer from 'inquirer';
 import ora from 'ora';
 
 import { SHARED_PACKAGES, TEMPLATE_DIRS } from '../utils/constants.js';
-import { isNexuProject, log } from '../utils/helpers.js';
+import {
+  isNexuProject,
+  log,
+  detectPackageManager,
+  getInstallCommand,
+  execInherit,
+} from '../utils/helpers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,27 +81,73 @@ function collectFileChanges(
   srcDir: string,
   destDir: string,
   category: string,
-  basePath: string = ''
+  basePath: string = '',
+  checkDeleted: boolean = true
 ): FileChange[] {
   const changes: FileChange[] = [];
 
-  if (!fs.existsSync(srcDir)) return changes;
+  // Collect additions and modifications from template
+  if (fs.existsSync(srcDir)) {
+    const entries = fs.readdirSync(srcDir, { withFileTypes: true });
 
-  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath = path.join(srcDir, entry.name);
+      const destPath = path.join(destDir, entry.name);
+      const relativePath = basePath ? path.join(basePath, entry.name) : entry.name;
+
+      if (entry.isDirectory()) {
+        changes.push(
+          ...collectFileChanges(srcPath, destPath, category, relativePath, checkDeleted)
+        );
+      } else {
+        if (!fs.existsSync(destPath)) {
+          changes.push({ type: 'add', relativePath, srcPath, destPath, category });
+        } else if (!compareFiles(srcPath, destPath)) {
+          changes.push({ type: 'modify', relativePath, srcPath, destPath, category });
+        }
+      }
+    }
+  }
+
+  // Collect deletions (files in project but not in template)
+  if (checkDeleted && fs.existsSync(destDir)) {
+    const destEntries = fs.readdirSync(destDir, { withFileTypes: true });
+
+    for (const entry of destEntries) {
+      const srcPath = path.join(srcDir, entry.name);
+      const destPath = path.join(destDir, entry.name);
+      const relativePath = basePath ? path.join(basePath, entry.name) : entry.name;
+
+      // Skip if it exists in template
+      if (fs.existsSync(srcPath)) continue;
+
+      if (entry.isDirectory()) {
+        // Recursively collect deleted files in subdirectories
+        changes.push(...collectDeletedFiles(destPath, category, relativePath));
+      } else {
+        changes.push({ type: 'delete', relativePath, srcPath, destPath, category });
+      }
+    }
+  }
+
+  return changes;
+}
+
+function collectDeletedFiles(destDir: string, category: string, basePath: string): FileChange[] {
+  const changes: FileChange[] = [];
+
+  if (!fs.existsSync(destDir)) return changes;
+
+  const entries = fs.readdirSync(destDir, { withFileTypes: true });
 
   for (const entry of entries) {
-    const srcPath = path.join(srcDir, entry.name);
     const destPath = path.join(destDir, entry.name);
-    const relativePath = basePath ? path.join(basePath, entry.name) : entry.name;
+    const relativePath = path.join(basePath, entry.name);
 
     if (entry.isDirectory()) {
-      changes.push(...collectFileChanges(srcPath, destPath, category, relativePath));
+      changes.push(...collectDeletedFiles(destPath, category, relativePath));
     } else {
-      if (!fs.existsSync(destPath)) {
-        changes.push({ type: 'add', relativePath, srcPath, destPath, category });
-      } else if (!compareFiles(srcPath, destPath)) {
-        changes.push({ type: 'modify', relativePath, srcPath, destPath, category });
-      }
+      changes.push({ type: 'delete', relativePath, srcPath: '', destPath, category });
     }
   }
 
@@ -177,8 +229,12 @@ function collectDependencyChanges(
     for (const [script, cmd] of Object.entries(templatePkg.scripts as Record<string, string>)) {
       if (!projectPkg.scripts?.[script]) {
         changes.changes.added.scripts[script] = cmd;
+      } else if (projectPkg.scripts[script] !== cmd) {
+        changes.changes.updated.scripts[script] = {
+          from: projectPkg.scripts[script],
+          to: cmd,
+        };
       }
-      // Don't show updated scripts since we preserve existing ones
     }
   }
 
@@ -225,6 +281,16 @@ function displayDependencyChanges(changes: ContentChange): void {
       console.log(chalk.green(`    + ${script}: ${String(cmd).substring(0, 50)}...`));
     }
   }
+
+  // Show updated scripts
+  if (Object.keys(updated.scripts).length > 0) {
+    console.log(chalk.cyan('\n  Updated scripts:'));
+    for (const [script, { from, to }] of Object.entries(updated.scripts)) {
+      console.log(chalk.yellow(`    ~ ${script}:`));
+      console.log(chalk.red(`      - ${from.substring(0, 60)}${from.length > 60 ? '...' : ''}`));
+      console.log(chalk.green(`      + ${to.substring(0, 60)}${to.length > 60 ? '...' : ''}`));
+    }
+  }
 }
 
 function hasChanges(changes: ContentChange): boolean {
@@ -234,7 +300,8 @@ function hasChanges(changes: ContentChange): boolean {
     Object.keys(added.devDependencies).length > 0 ||
     Object.keys(added.scripts).length > 0 ||
     Object.keys(updated.dependencies).length > 0 ||
-    Object.keys(updated.devDependencies).length > 0
+    Object.keys(updated.devDependencies).length > 0 ||
+    Object.keys(updated.scripts).length > 0
   );
 }
 
@@ -398,10 +465,12 @@ export async function update(options: UpdateOptions): Promise<void> {
   // Display summary of changes
   const addedFiles = allFileChanges.filter(c => c.type === 'add');
   const modifiedFiles = allFileChanges.filter(c => c.type === 'modify');
+  const deletedFiles = allFileChanges.filter(c => c.type === 'delete');
 
   if (
     addedFiles.length === 0 &&
     modifiedFiles.length === 0 &&
+    deletedFiles.length === 0 &&
     (!dependencyChanges || !hasChanges(dependencyChanges))
   ) {
     console.log(chalk.green('✓ Your project is up to date! No changes needed.\n'));
@@ -429,6 +498,7 @@ export async function update(options: UpdateOptions): Promise<void> {
 
     const added = categoryChanges.filter(c => c.type === 'add');
     const modified = categoryChanges.filter(c => c.type === 'modify');
+    const deleted = categoryChanges.filter(c => c.type === 'delete');
 
     if (added.length > 0) {
       console.log(chalk.green(`  New files (${added.length}):`));
@@ -447,6 +517,16 @@ export async function update(options: UpdateOptions): Promise<void> {
       }
       if (modified.length > 10) {
         console.log(chalk.gray(`    ... and ${modified.length - 10} more files`));
+      }
+    }
+
+    if (deleted.length > 0) {
+      console.log(chalk.red(`  Deleted files (${deleted.length}):`));
+      for (const change of deleted.slice(0, 10)) {
+        console.log(chalk.red(`    - ${change.relativePath}`));
+      }
+      if (deleted.length > 10) {
+        console.log(chalk.gray(`    ... and ${deleted.length - 10} more files`));
       }
     }
   }
@@ -542,12 +622,28 @@ export async function update(options: UpdateOptions): Promise<void> {
   const applySpinner = ora('Applying changes...').start();
 
   let appliedFiles = 0;
+  let deletedFilesCount = 0;
+
   for (const change of allFileChanges) {
     if (!selectedCategories.includes(change.category)) continue;
 
-    fs.ensureDirSync(path.dirname(change.destPath));
-    fs.copySync(change.srcPath, change.destPath, { overwrite: true });
-    appliedFiles++;
+    if (change.type === 'delete') {
+      // Delete the file
+      if (fs.existsSync(change.destPath)) {
+        fs.removeSync(change.destPath);
+        deletedFilesCount++;
+      }
+    } else {
+      // Add or modify the file
+      fs.ensureDirSync(path.dirname(change.destPath));
+      fs.copySync(change.srcPath, change.destPath, { overwrite: true });
+      appliedFiles++;
+    }
+  }
+
+  // Clean up empty directories after deletions
+  if (deletedFilesCount > 0) {
+    cleanEmptyDirectories(projectDir);
   }
 
   // Apply dependency changes
@@ -574,11 +670,11 @@ export async function update(options: UpdateOptions): Promise<void> {
       };
     }
 
-    // Merge scripts (add missing ones, don't overwrite existing)
+    // Merge scripts (update all scripts from template)
     if (templatePkg.scripts) {
       projectPkg.scripts = {
-        ...templatePkg.scripts,
         ...projectPkg.scripts,
+        ...templatePkg.scripts,
       };
     }
 
@@ -593,13 +689,53 @@ export async function update(options: UpdateOptions): Promise<void> {
     fs.writeJsonSync(projectPkgPath, projectPkg, { spaces: 2 });
   }
 
-  applySpinner.succeed(`Applied ${appliedFiles} file changes`);
+  const summary = [];
+  if (appliedFiles > 0) summary.push(`${appliedFiles} files updated`);
+  if (deletedFilesCount > 0) summary.push(`${deletedFilesCount} files deleted`);
+
+  applySpinner.succeed(summary.join(', ') || 'No file changes applied');
+
+  // Run install if dependencies were updated
+  if (
+    selectedCategories.includes('dependencies') &&
+    dependencyChanges &&
+    hasChanges(dependencyChanges)
+  ) {
+    const pm = detectPackageManager(projectDir);
+    const installCmd = getInstallCommand(pm);
+
+    console.log(chalk.blue(`\n📦 Installing dependencies with ${pm}...\n`));
+
+    try {
+      execInherit(installCmd, projectDir);
+      console.log(chalk.green('\n✓ Dependencies installed'));
+    } catch {
+      console.log(
+        chalk.yellow(`\n! Failed to install dependencies. Run "${installCmd}" manually.`)
+      );
+    }
+  }
 
   console.log('\n' + chalk.green.bold('✨ Update complete!\n'));
-  if (selectedCategories.includes('dependencies')) {
-    console.log('Run your package manager install command to install any new dependencies.');
+}
+
+function cleanEmptyDirectories(dir: string): void {
+  if (!fs.existsSync(dir)) return;
+
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const fullPath = path.join(dir, entry.name);
+      cleanEmptyDirectories(fullPath);
+
+      // Check if directory is now empty
+      const remaining = fs.readdirSync(fullPath);
+      if (remaining.length === 0) {
+        fs.rmdirSync(fullPath);
+      }
+    }
   }
-  console.log('');
 }
 
 function sortObject(obj: Record<string, string>): Record<string, string> {
