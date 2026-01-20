@@ -46,9 +46,10 @@ sed -i '' "/- 'create-nexu'/d" "$TEMPLATE_DIR/pnpm-workspace.yaml"
 # Remove create-nexu from .eslintrc.js ignorePatterns in template
 sed -i '' "/'create-nexu',/d" "$TEMPLATE_DIR/.eslintrc.js"
 
-# Remove generate-template.sh and publish-cli.sh from template (only for this repo)
+# Remove shell scripts from template (only for this repo, we use .js for cross-platform)
 rm -f "$TEMPLATE_DIR/scripts/generate-template.sh"
 rm -f "$TEMPLATE_DIR/scripts/publish-cli.sh"
+rm -f "$TEMPLATE_DIR/scripts/generate-app.sh"
 
 # Remove lint-staged from template package.json (to avoid conflicts with root lint-staged)
 node -e "
