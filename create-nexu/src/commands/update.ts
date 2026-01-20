@@ -118,6 +118,11 @@ function collectFileChanges(
       const destPath = path.join(destDir, entry.name);
       const relativePath = basePath ? path.join(basePath, entry.name) : entry.name;
 
+      // Skip excluded directories/files
+      if (shouldExcludeFromDeletion(entry.name, relativePath)) {
+        continue;
+      }
+
       // Skip if it exists in template
       if (fs.existsSync(srcPath)) continue;
 
@@ -133,6 +138,36 @@ function collectFileChanges(
   return changes;
 }
 
+// Directories/files to exclude from deletion detection
+const EXCLUDE_FROM_DELETION = [
+  'node_modules',
+  '.git',
+  '.turbo',
+  'dist',
+  'build',
+  '.next',
+  'coverage',
+  '.husky/_', // Husky internal files
+  '.DS_Store',
+];
+
+function shouldExcludeFromDeletion(name: string, relativePath: string): boolean {
+  // Check if name matches any exclusion
+  if (EXCLUDE_FROM_DELETION.includes(name)) {
+    return true;
+  }
+  // Check if path starts with any exclusion pattern
+  for (const pattern of EXCLUDE_FROM_DELETION) {
+    if (relativePath.startsWith(pattern + '/') || relativePath.startsWith(pattern + path.sep)) {
+      return true;
+    }
+    if (relativePath === pattern) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function collectDeletedFiles(destDir: string, category: string, basePath: string): FileChange[] {
   const changes: FileChange[] = [];
 
@@ -143,6 +178,11 @@ function collectDeletedFiles(destDir: string, category: string, basePath: string
   for (const entry of entries) {
     const destPath = path.join(destDir, entry.name);
     const relativePath = path.join(basePath, entry.name);
+
+    // Skip excluded directories/files
+    if (shouldExcludeFromDeletion(entry.name, relativePath)) {
+      continue;
+    }
 
     if (entry.isDirectory()) {
       changes.push(...collectDeletedFiles(destPath, category, relativePath));

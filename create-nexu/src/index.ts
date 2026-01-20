@@ -1,15 +1,22 @@
+import { readFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
 import { Command } from 'commander';
 
 import { add } from './commands/add.js';
 import { init } from './commands/init.js';
 import { update } from './commands/update.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+
 const program = new Command();
 
 program
   .name('create-nexu')
   .description('CLI to create and update Nexu monorepo projects')
-  .version('1.0.0');
+  .version(packageJson.version);
 
 // Default command: create a new project
 program

@@ -19,7 +19,7 @@ module.exports = {
         'build', // Changements de build
       ],
     ],
-    'subject-case': [2, 'always', 'lower-case'],
+    'subject-case': [0], // Désactivé - accepte toutes les casses
     'subject-max-length': [2, 'always', 100],
     'body-max-line-length': [0, 'always', Infinity],
   },

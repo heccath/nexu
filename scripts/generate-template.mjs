@@ -27,6 +27,7 @@ const EXCLUDES = [
   '.claude',
   'README.md',
   '.lintstagedrc.cjs',
+  '.husky/_', // Husky internal files
 ];
 
 console.log('🔄 Generating template...');
@@ -52,6 +53,14 @@ function copyDir(src, dest, excludes = []) {
         // Handle glob patterns like *.log
         const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
         return regex.test(entry.name);
+      }
+      // Exclude node_modules anywhere in the tree
+      if (pattern === 'node_modules' && entry.name === 'node_modules') {
+        return true;
+      }
+      // Exclude .husky/_ directory
+      if (pattern === '.husky/_' && relativePath.startsWith('.husky/_')) {
+        return true;
       }
       return entry.name === pattern || relativePath === pattern || relativePath.startsWith(pattern + '/');
     });
