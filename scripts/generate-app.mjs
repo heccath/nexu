@@ -392,7 +392,7 @@ function createBackendApp(appDir, appName, framework, port) {
     },
     dependencies: {},
     devDependencies: {
-      '@repo/typescript-config': 'workspace:*',
+      '@repo/config': 'workspace:*',
     },
   };
 
@@ -415,7 +415,7 @@ function createBackendApp(appDir, appName, framework, port) {
 
   // Create tsconfig.json
   const tsconfig = {
-    extends: '@repo/typescript-config/node.json',
+    extends: '@repo/config/typescript/base',
     compilerOptions: {
       outDir: 'dist',
       rootDir: 'src',

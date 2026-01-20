@@ -6,6 +6,9 @@ commitlint.config.js
 *.config.ts
 packages/config/**
 
+# Scripts (JavaScript, not TypeScript)
+scripts/**
+
 # Build outputs
 node_modules
 dist
