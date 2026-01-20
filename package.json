@@ -18,8 +18,8 @@
     "docker:build": "docker-compose -f docker/docker-compose.prod.yml build",
     "docker:prod": "docker-compose -f docker/docker-compose.prod.yml up -d",
     "generate:app": "node scripts/generate-app.mjs",
-    "generate:template": "./scripts/generate-template.sh",
-    "publish:cli": "./scripts/publish-cli.sh",
+    "generate:template": "node scripts/generate-template.mjs",
+    "publish:cli": "node scripts/publish-cli.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "changeset publish"
