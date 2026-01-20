@@ -8,6 +8,7 @@ export const TEMPLATE_DIRS = {
     '.eslintignore',
     '.prettierrc',
     '.prettierignore',
+    '.nexu-version',
     'tsconfig.json',
     'turbo.json',
     'vitest.config.ts',
