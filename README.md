@@ -40,92 +40,54 @@ nexu/
 │       ├── docker-compose.yml
 │       └── docker-compose.prod.yml
 ├── packages/                # Packages partagés
+│   ├── cache/              # Cache in-memory avec TTL
 │   ├── config/             # Configs ESLint/TypeScript
+│   ├── constants/          # Constantes partagées
+│   ├── logger/             # Logger structuré
+│   ├── result/             # Try/catch fonctionnel
 │   ├── types/              # Types partagés
 │   ├── utils/              # Utilitaires
 │   └── ui/                 # Composants UI
-├── services/                # Services Docker externes
+├── services/               # Services Docker externes
 │   ├── docker-compose.yml  # Config avec profiles
 │   ├── postgres/           # Config PostgreSQL
 │   ├── prometheus/         # Config Prometheus
 │   └── grafana/            # Config Grafana
-├── create-nexu/             # CLI create-nexu
+├── create-nexu/            # CLI create-nexu
 │   ├── src/                # Source du CLI
 │   └── templates/          # Templates du monorepo
 ├── docker/
-│   └── docker-compose.yml  # Compose principal (inclut toutes les apps)
+│   └── docker-compose.yml  # Compose principal
 └── scripts/
-    ├── generate-app.sh     # Générateur d'apps
-    ├── generate-template.sh # Génère le template CLI
-    └── publish-cli.sh      # Publie le CLI sur npm
+    ├── generate-app.mjs    # Générateur d'apps
+    └── audit.mjs           # Audit sécurité/qualité
 ```
 
-## Installation
+## Documentation
 
-### Option 1: Via CLI (recommandé)
-
-```bash
-npm create nexu my-project
-cd my-project
-pnpm dev
-```
-
-Le CLI vous permet de sélectionner les packages et features à inclure.
-
-### Option 2: Clone manuel
-
-```bash
-git clone https://github.com/heccath/nexu.git my-project
-cd my-project
-rm -rf .git create-nexu
-git init
-pnpm install
-pnpm build
-```
-
-## Créer une application
-
-```bash
-pnpm generate:app <nom> <port>
-```
-
-**Exemples:**
-
-```bash
-pnpm generate:app web 3000
-pnpm generate:app api 4000
-```
-
-Fichiers créés:
-
-```
-apps/<nom>/
-├── src/
-├── docker/
-│   └── Dockerfile
-├── docker-compose.yml
-└── docker-compose.prod.yml
-```
-
-L'app est automatiquement ajoutée au `docker/docker-compose.yml` principal.
+- [Documentation CLI](docs/cli.md) - Guide d'utilisation du CLI create-nexu
+- [Documentation Scripts](docs/scripts.md) - Scripts disponibles
+- [Architecture](docs/architecture.md) - Vue d'ensemble de l'architecture
+- [Contribution](docs/contributing.md) - Guide de contribution
 
 ## Commandes
 
-| Commande                 | Description             |
-| ------------------------ | ----------------------- |
-| `pnpm dev`               | Développement           |
-| `pnpm build`             | Build                   |
-| `pnpm lint`              | Vérifier le code        |
-| `pnpm lint:fix`          | Corriger le code        |
-| `pnpm format`            | Formater                |
-| `pnpm typecheck`         | Vérifier les types      |
-| `pnpm test`              | Tests                   |
-| `pnpm clean`             | Nettoyer                |
-| `pnpm generate:app`      | Créer une app           |
-| `pnpm generate:template` | Générer le template CLI |
-| `pnpm publish:cli`       | Publier le CLI sur npm  |
-| `pnpm changeset`         | Créer un changeset      |
-| `pnpm version-packages`  | Versionner les packages |
+| Commande                | Description                |
+| ----------------------- | -------------------------- |
+| `pnpm dev`              | Développement              |
+| `pnpm build`            | Build                      |
+| `pnpm lint`             | Vérifier le code           |
+| `pnpm lint:fix`         | Corriger le code           |
+| `pnpm format`           | Formater                   |
+| `pnpm typecheck`        | Vérifier les types         |
+| `pnpm test`             | Tests                      |
+| `pnpm clean`            | Nettoyer                   |
+| `pnpm generate:app`     | Créer une app (interactif) |
+| `pnpm audit`            | Audit complet              |
+| `pnpm audit:security`   | Audit sécurité             |
+| `pnpm audit:quality`    | Audit qualité              |
+| `pnpm changeset`        | Créer un changeset         |
+| `pnpm version-packages` | Versionner les packages    |
 
 ### Filtrer par package
 
@@ -133,6 +95,86 @@ L'app est automatiquement ajoutée au `docker/docker-compose.yml` principal.
 pnpm dev --filter=@repo/<nom>
 pnpm build --filter=@repo/<nom>
 ```
+
+## Créer une application
+
+```bash
+# Mode interactif (recommandé)
+pnpm generate:app
+
+# Avec arguments
+pnpm generate:app <nom> <framework> <port>
+```
+
+### Frameworks disponibles
+
+**Frontend:**
+| Framework | Commande |
+|-----------|----------|
+| Next.js | `pnpm generate:app web next 3000` |
+| Vite + React | `pnpm generate:app web vite-react 3000` |
+| Vite + Vue | `pnpm generate:app web vite-vue 3000` |
+| Vite + Svelte | `pnpm generate:app web vite-svelte 3000` |
+| Nuxt | `pnpm generate:app web nuxt 3000` |
+
+**Backend:**
+| Framework | Commande |
+|-----------|----------|
+| Express.js | `pnpm generate:app api express 4000` |
+| Fastify | `pnpm generate:app api fastify 4000` |
+| Hono | `pnpm generate:app api hono 4000` |
+| NestJS | `pnpm generate:app api nestjs 4000` |
+| Empty (Node.js) | `pnpm generate:app api empty 4000` |
+
+### Fichiers créés
+
+```
+apps/<nom>/
+├── src/
+├── docker/
+│   ├── Dockerfile
+│   └── nginx.conf      # Pour Vite uniquement
+├── docker-compose.yml
+└── docker-compose.prod.yml
+```
+
+L'app est automatiquement ajoutée au `docker/docker-compose.yml` principal.
+
+## Audit de code
+
+La commande `pnpm audit` exécute plusieurs vérifications sur votre codebase:
+
+```bash
+# Audit complet
+pnpm audit
+
+# Sécurité uniquement (vulnérabilités + secrets)
+pnpm audit:security
+
+# Qualité uniquement (ESLint + TypeScript)
+pnpm audit:quality
+
+# Avec auto-correction
+pnpm audit:fix
+
+# Options avancées
+pnpm audit --verbose           # Affichage détaillé
+pnpm audit --app=my-app        # Auditer une app spécifique
+pnpm audit --deps              # Dépendances uniquement
+pnpm audit --secrets           # Détection de secrets
+```
+
+### Vérifications effectuées
+
+| Check                   | Description                                           |
+| ----------------------- | ----------------------------------------------------- |
+| Vulnérabilités          | npm/pnpm/yarn audit                                   |
+| Secrets                 | Détection de clés API, tokens, mots de passe          |
+| ESLint                  | Analyse de qualité du code                            |
+| TypeScript              | Vérification des types                                |
+| Dépendances obsolètes   | Packages à mettre à jour                              |
+| Dépendances inutilisées | Packages non utilisés (requiert depcheck)             |
+| Licences                | Vérification de conformité (requiert license-checker) |
 
 ## Docker
 
@@ -190,8 +232,6 @@ docker compose -f services/docker-compose.yml --profile database down
 | MinIO      | http://localhost:9001  | nexu / nexu1234 |
 | Prometheus | http://localhost:9090  | -               |
 
-Voir [services/README.md](services/README.md) pour plus de détails.
-
 ## Packages partagés
 
 Les packages dans `packages/` sont utilisables dans toutes les apps.
@@ -226,71 +266,38 @@ import { Button, Card } from '@repo/ui';
 
 ### Packages disponibles
 
-| Package                   | Description               |
-| ------------------------- | ------------------------- |
-| `@repo/types`             | Types TypeScript partagés |
-| `@repo/utils`             | Fonctions utilitaires     |
-| `@repo/ui`                | Composants React          |
-| `@repo/logger`            | Logger avec niveaux       |
-| `@repo/cache`             | Cache in-memory avec TTL  |
-| `@repo/constants`         | Constantes partagées      |
-| `@repo/result`            | Try/catch fonctionnel     |
-| `@repo/eslint-config`     | Configuration ESLint      |
-| `@repo/typescript-config` | Configuration TypeScript  |
+| Package                   | Description                            |
+| ------------------------- | -------------------------------------- |
+| `@repo/types`             | Types TypeScript partagés              |
+| `@repo/utils`             | Fonctions utilitaires                  |
+| `@repo/ui`                | Composants React                       |
+| `@repo/logger`            | Logger structuré avec couleurs et JSON |
+| `@repo/cache`             | Cache in-memory avec TTL               |
+| `@repo/constants`         | Constantes partagées                   |
+| `@repo/result`            | Try/catch fonctionnel                  |
+| `@repo/eslint-config`     | Configuration ESLint                   |
+| `@repo/typescript-config` | Configuration TypeScript               |
 
 ### Exemples d'utilisation
-
-#### Types
-
-```typescript
-import type { User, ApiResponse, PaginatedResponse } from '@repo/types';
-
-const user: User = { id: '1', name: 'John', email: 'john@example.com' };
-
-const response: ApiResponse<User> = {
-  success: true,
-  data: user,
-};
-```
-
-#### Utils
-
-```typescript
-import { capitalize, slugify, truncate, chunk, isEmpty } from '@repo/utils';
-
-capitalize('hello'); // "Hello"
-slugify('Hello World'); // "hello-world"
-truncate('Long text here', 10); // "Long te..."
-chunk([1, 2, 3, 4, 5], 2); // [[1, 2], [3, 4], [5]]
-isEmpty({}); // true
-```
-
-#### UI
-
-```tsx
-import { Button, Card, Input } from '@repo/ui';
-
-<Button variant="primary" onClick={handleClick}>
-  Click me
-</Button>
-
-<Card title="Card Title">
-  Content here
-</Card>
-
-<Input placeholder="Enter text" value={value} onChange={onChange} />
-```
 
 #### Logger
 
 ```typescript
 import { logger, createLogger } from '@repo/logger';
 
+// Logger par défaut
 logger.info('Application started');
 logger.error('Something went wrong', { error });
 
-const appLogger = createLogger({ prefix: 'api', level: 'debug' });
+// Logger personnalisé
+const appLogger = createLogger({
+  prefix: 'api',
+  level: 'debug',
+  colors: true,
+  json: false,
+});
 appLogger.debug('Request received');
+appLogger.warn('Deprecated endpoint used');
 ```
 
 #### Cache
@@ -304,20 +311,6 @@ const cached = cache.get('user:1');
 
 // Memoization
 const expensiveFn = memoize(async (id: string) => fetchUser(id), { ttl: 5000 });
-```
-
-#### Constants
-
-```typescript
-import { HTTP_STATUS, ERROR_CODE, USER_ROLE, REGEX } from '@repo/constants';
-
-if (response.status === HTTP_STATUS.NOT_FOUND) {
-  // Handle 404
-}
-
-if (REGEX.EMAIL.test(email)) {
-  // Valid email
-}
 ```
 
 #### Result
@@ -342,11 +335,52 @@ const message = match(result, {
   ok: data => `Success: ${data}`,
   err: error => `Error: ${error.message}`,
 });
-
-// Wrap existing functions
-const safeParseJSON = wrap(JSON.parse);
-const parsed = safeParseJSON('{"name": "John"}');
 ```
+
+#### Constants
+
+```typescript
+import { HTTP_STATUS, ERROR_CODE, USER_ROLE, REGEX } from '@repo/constants';
+
+if (response.status === HTTP_STATUS.NOT_FOUND) {
+  // Handle 404
+}
+
+if (REGEX.EMAIL.test(email)) {
+  // Valid email
+}
+```
+
+## CLI create-nexu
+
+Le CLI `create-nexu` permet de créer et mettre à jour des projets Nexu.
+
+### Commandes principales
+
+```bash
+# Créer un nouveau projet
+npx create-nexu my-project
+npx create-nexu my-project --skip-install  # Sans installation
+npx create-nexu my-project --skip-git      # Sans init git
+
+# Mettre à jour un projet existant
+npx create-nexu update
+npx create-nexu update --preview           # Prévisualiser les changements
+npx create-nexu update --dry-run           # Simulation
+
+# Mettre à jour des parties spécifiques
+npx create-nexu update --packages          # Packages partagés
+npx create-nexu update --config            # Fichiers de config
+npx create-nexu update --workflows         # GitHub workflows
+npx create-nexu update --scripts           # Scripts
+npx create-nexu update --dependencies      # Dépendances package.json
+
+# Ajouter des composants
+npx create-nexu add package                # Nouveau package partagé
+npx create-nexu add service                # Nouveau service Docker
+```
+
+Voir [docs/cli.md](docs/cli.md) pour plus de détails.
 
 ## Workflow Git
 
@@ -364,26 +398,35 @@ const parsed = safeParseJSON('{"name": "John"}');
 feature/* ──PR──> dev ──PR──> rec ──PR──> main
 ```
 
-1. Créer une branche feature depuis `dev`
-2. PR vers `dev` → déploiement automatique en development
-3. PR vers `rec` → déploiement automatique en recette
-4. PR vers `main` → déploiement automatique en production
-
 ### CI/CD
 
 - **CI** : Lint, format, typecheck, test, build sur chaque push/PR
 - **Deploy** : Build Docker + push vers GHCR sur push vers dev/rec/main
-- **Dependabot** : PRs automatiques pour les mises à jour de dépendances (lundi)
+- **Dependabot** : PRs automatiques pour les mises à jour de dépendances
 
-### Remote Caching (Turborepo)
+## Conventions Git
 
-Pour activer le cache partagé entre CI et développeurs :
+```
+<type>: <description>
 
-1. Créer un compte sur [Vercel](https://vercel.com)
-2. Lier le projet : `npx turbo login && npx turbo link`
-3. Ajouter les secrets GitHub :
-   - `TURBO_TOKEN` : Token Vercel
-   - `TURBO_TEAM` : Nom de l'équipe (variable)
+feat:     Nouvelle fonctionnalité
+fix:      Correction de bug
+docs:     Documentation
+style:    Formatage
+refactor: Refactorisation
+perf:     Performance
+test:     Tests
+build:    Build/deps
+ci:       CI/CD
+chore:    Maintenance
+```
+
+**Exemples:**
+
+```bash
+git commit -m "feat: add user authentication"
+git commit -m "fix: resolve login redirect issue"
+```
 
 ## Tests
 
@@ -413,78 +456,12 @@ Pour documenter les changements lors d'une PR :
 pnpm changeset
 ```
 
-Suivez les instructions pour sélectionner les packages modifiés et le type de version (major/minor/patch).
-
 Avant une release :
 
 ```bash
 pnpm version-packages  # Met à jour les versions et CHANGELOGs
 ```
 
-## Conventions Git
+## License
 
-```
-<type>: <description>
-
-feat:     Nouvelle fonctionnalité
-fix:      Correction de bug
-docs:     Documentation
-style:    Formatage
-refactor: Refactorisation
-perf:     Performance
-test:     Tests
-build:    Build/deps
-ci:       CI/CD
-chore:    Maintenance
-```
-
-**Exemples:**
-
-```bash
-git commit -m "feat: add user authentication"
-git commit -m "fix: resolve login redirect issue"
-```
-
-## CLI create-nexu
-
-Le CLI `create-nexu` permet de créer et mettre à jour des projets Nexu.
-
-### Installation
-
-```bash
-# Créer un nouveau projet
-npm create nexu my-project
-
-# Ou avec npx
-npx create-nexu my-project
-```
-
-### Commandes
-
-```bash
-# Créer un projet (interactif)
-npx create-nexu my-project
-
-# Options disponibles
-npx create-nexu my-project --skip-install  # Ne pas installer les dépendances
-npx create-nexu my-project --skip-git      # Ne pas initialiser git
-
-# Mettre à jour un projet existant
-npx create-nexu update
-
-# Ajouter un package
-npx create-nexu add package
-
-# Ajouter des services Docker
-npx create-nexu add service
-```
-
-### Développement du CLI
-
-```bash
-# Générer le template depuis le monorepo
-pnpm generate:template
-
-# Publier sur npm
-pnpm publish:cli
-```
+MIT

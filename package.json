@@ -20,6 +20,10 @@
     "generate:app": "node scripts/generate-app.mjs",
     "generate:template": "node scripts/generate-template.mjs",
     "publish:cli": "node scripts/publish-cli.mjs",
+    "audit": "node scripts/audit.mjs",
+    "audit:security": "node scripts/audit.mjs --security",
+    "audit:quality": "node scripts/audit.mjs --quality",
+    "audit:fix": "node scripts/audit.mjs --quality --fix",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "changeset publish"

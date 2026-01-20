@@ -18,6 +18,10 @@
     "docker:build": "docker-compose -f docker/docker-compose.prod.yml build",
     "docker:prod": "docker-compose -f docker/docker-compose.prod.yml up -d",
     "generate:app": "node scripts/generate-app.mjs",
+    "audit": "node scripts/audit.mjs",
+    "audit:security": "node scripts/audit.mjs --security",
+    "audit:quality": "node scripts/audit.mjs --quality",
+    "audit:fix": "node scripts/audit.mjs --quality --fix",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "changeset publish"
