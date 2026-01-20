@@ -7,7 +7,7 @@ import inquirer from 'inquirer';
 import ora from 'ora';
 
 import { SHARED_PACKAGES } from '../utils/constants.js';
-import { exec, log, getInstallCommand, getRunCommand } from '../utils/helpers.js';
+import { exec, execInherit, log, getInstallCommand, getRunCommand } from '../utils/helpers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -256,13 +256,15 @@ export async function init(projectName: string | undefined, options: InitOptions
   // Install dependencies
   const runCmd = getRunCommand(packageManager!);
   if (!options.skipInstall) {
-    const installSpinner = ora(`Installing dependencies with ${packageManager}...`).start();
+    console.log(chalk.blue(`\n📦 Installing dependencies with ${packageManager}...\n`));
     try {
-      exec(getInstallCommand(packageManager!), projectDir);
-      installSpinner.succeed('Dependencies installed');
+      execInherit(getInstallCommand(packageManager!), projectDir);
+      console.log(chalk.green('\n✓ Dependencies installed'));
     } catch {
-      installSpinner.warn(
-        `Failed to install dependencies. Run "${getInstallCommand(packageManager!)}" manually.`
+      console.log(
+        chalk.yellow(
+          `\n! Failed to install dependencies. Run "${getInstallCommand(packageManager!)}" manually.`
+        )
       );
     }
   }

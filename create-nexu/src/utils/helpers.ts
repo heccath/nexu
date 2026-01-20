@@ -28,6 +28,17 @@ export function exec(command: string, cwd?: string): string {
   }
 }
 
+export function execInherit(command: string, cwd?: string): void {
+  try {
+    execSync(command, {
+      cwd,
+      stdio: 'inherit',
+    });
+  } catch (error) {
+    throw new Error(`Command failed: ${command}`);
+  }
+}
+
 export function execSilent(command: string, cwd?: string): boolean {
   try {
     execSync(command, {
