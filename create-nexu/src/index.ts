@@ -34,8 +34,11 @@ program
   .option('-c, --config', 'Update only configuration files')
   .option('-w, --workflows', 'Update only GitHub workflows')
   .option('-s, --services', 'Update only Docker services')
+  .option('--scripts', 'Update only scripts')
+  .option('-d, --dependencies', 'Update only package.json dependencies')
   .option('--all', 'Update everything (default)')
   .option('--dry-run', 'Show what would be updated without making changes')
+  .option('--preview', 'Show detailed file differences before applying')
   .action(update);
 
 // Add command
