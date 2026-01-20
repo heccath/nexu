@@ -7,7 +7,7 @@ import inquirer from 'inquirer';
 import ora from 'ora';
 
 import { SHARED_PACKAGES } from '../utils/constants.js';
-import { exec, log } from '../utils/helpers.js';
+import { exec, log, getInstallCommand, getRunCommand } from '../utils/helpers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +16,7 @@ interface InitOptions {
   template: string;
   skipInstall?: boolean;
   skipGit?: boolean;
+  packageManager?: 'npm' | 'yarn' | 'pnpm';
 }
 
 function getTemplateDir(): string {
@@ -105,6 +106,25 @@ export async function init(projectName: string | undefined, options: InitOptions
     }
   }
 
+  // Select package manager
+  let packageManager = options.packageManager;
+  if (!packageManager) {
+    const { pm } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'pm',
+        message: 'Select package manager:',
+        choices: [
+          { name: 'pnpm (recommended)', value: 'pnpm' },
+          { name: 'npm', value: 'npm' },
+          { name: 'yarn', value: 'yarn' },
+        ],
+        default: 'pnpm',
+      },
+    ]);
+    packageManager = pm;
+  }
+
   // Select packages to include
   const { selectedPackages } = await inquirer.prompt([
     {
@@ -148,11 +168,29 @@ export async function init(projectName: string | undefined, options: InitOptions
     process.exit(1);
   }
 
-  // Update package.json with project name
+  // Update package.json with project name and remove packageManager field
   const packageJsonPath = path.join(projectDir, 'package.json');
-  let packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');
-  packageJsonContent = packageJsonContent.replace('{{PROJECT_NAME}}', projectName);
-  fs.writeFileSync(packageJsonPath, packageJsonContent);
+  const packageJson = fs.readJsonSync(packageJsonPath);
+  packageJson.name = projectName;
+
+  // Remove the packageManager field to let users use any package manager
+  delete packageJson.packageManager;
+
+  // Remove unselected features from package.json
+  if (!features.includes('changesets')) {
+    delete packageJson.scripts['changeset'];
+    delete packageJson.scripts['version-packages'];
+    delete packageJson.scripts['release'];
+    delete packageJson.devDependencies['@changesets/cli'];
+  }
+  if (!features.includes('husky')) {
+    delete packageJson.scripts['prepare'];
+    delete packageJson.devDependencies['husky'];
+    delete packageJson.devDependencies['lint-staged'];
+    delete packageJson['lint-staged'];
+  }
+
+  fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
 
   // Remove unselected packages
   const packagesToRemove = SHARED_PACKAGES.filter(pkg => !selectedPackages.includes(pkg));
@@ -185,23 +223,22 @@ export async function init(projectName: string | undefined, options: InitOptions
     fs.removeSync(path.join(projectDir, '.vscode'));
   }
 
-  // Update package.json to remove scripts/deps for unselected features
-  const packageJson = fs.readJsonSync(packageJsonPath);
-
-  if (!features.includes('changesets')) {
-    delete packageJson.scripts['changeset'];
-    delete packageJson.scripts['version-packages'];
-    delete packageJson.scripts['release'];
-    delete packageJson.devDependencies['@changesets/cli'];
+  // Create workspace config based on package manager
+  if (packageManager === 'yarn') {
+    // Remove pnpm-workspace.yaml and create package.json workspaces
+    fs.removeSync(path.join(projectDir, 'pnpm-workspace.yaml'));
+    fs.removeSync(path.join(projectDir, '.npmrc'));
+    const updatedPkg = fs.readJsonSync(packageJsonPath);
+    updatedPkg.workspaces = ['apps/*', 'packages/*'];
+    fs.writeJsonSync(packageJsonPath, updatedPkg, { spaces: 2 });
+  } else if (packageManager === 'npm') {
+    // Remove pnpm-workspace.yaml and create package.json workspaces
+    fs.removeSync(path.join(projectDir, 'pnpm-workspace.yaml'));
+    fs.removeSync(path.join(projectDir, '.npmrc'));
+    const updatedPkg = fs.readJsonSync(packageJsonPath);
+    updatedPkg.workspaces = ['apps/*', 'packages/*'];
+    fs.writeJsonSync(packageJsonPath, updatedPkg, { spaces: 2 });
   }
-  if (!features.includes('husky')) {
-    delete packageJson.scripts['prepare'];
-    delete packageJson.devDependencies['husky'];
-    delete packageJson.devDependencies['lint-staged'];
-    delete packageJson['lint-staged'];
-  }
-
-  fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
 
   // Initialize git
   if (!options.skipGit) {
@@ -217,13 +254,16 @@ export async function init(projectName: string | undefined, options: InitOptions
   }
 
   // Install dependencies
+  const runCmd = getRunCommand(packageManager!);
   if (!options.skipInstall) {
-    const installSpinner = ora('Installing dependencies...').start();
+    const installSpinner = ora(`Installing dependencies with ${packageManager}...`).start();
     try {
-      exec('pnpm install', projectDir);
+      exec(getInstallCommand(packageManager!), projectDir);
       installSpinner.succeed('Dependencies installed');
     } catch {
-      installSpinner.warn('Failed to install dependencies. Run "pnpm install" manually.');
+      installSpinner.warn(
+        `Failed to install dependencies. Run "${getInstallCommand(packageManager!)}" manually.`
+      );
     }
   }
 
@@ -234,11 +274,11 @@ export async function init(projectName: string | undefined, options: InitOptions
     console.log(chalk.cyan(`  cd ${projectName}`));
   }
   if (options.skipInstall) {
-    console.log(chalk.cyan('  pnpm install'));
+    console.log(chalk.cyan(`  ${getInstallCommand(packageManager!)}`));
   }
-  console.log(chalk.cyan('  pnpm dev'));
+  console.log(chalk.cyan(`  ${runCmd} dev`));
   console.log('\nTo create an app:');
-  console.log(chalk.cyan('  pnpm generate:app <name> <port>'));
+  console.log(chalk.cyan(`  ${runCmd} generate:app <name> <port>`));
   console.log('\nTo update with latest features:');
   console.log(chalk.cyan('  npx create-nexu update'));
   console.log('');

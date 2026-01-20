@@ -2,44 +2,48 @@
 
 import fs from 'fs';
 import path from 'path';
-import { execSync, spawnSync } from 'child_process';
+import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import {
+  detectPackageManager,
+  isPackageManagerInstalled,
+  getInstallCommand,
+  getRunCommand,
+} from './lib/package-manager.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 
+// Detect package manager
+const pm = detectPackageManager(ROOT_DIR);
+const runCmd = getRunCommand(pm);
+
 console.log('🚀 Setting up monorepo...');
+console.log(`📦 Using package manager: ${pm}`);
 
 function run(cmd) {
   console.log(`> ${cmd}`);
   execSync(cmd, { stdio: 'inherit', cwd: ROOT_DIR });
 }
 
-function commandExists(cmd) {
-  try {
-    const result = spawnSync(process.platform === 'win32' ? 'where' : 'which', [cmd], {
-      stdio: 'pipe',
-    });
-    return result.status === 0;
-  } catch {
-    return false;
+// Check if package manager is installed
+if (!isPackageManagerInstalled(pm)) {
+  console.log(`📦 Installing ${pm}...`);
+  if (pm === 'pnpm') {
+    run('npm install -g pnpm');
+  } else if (pm === 'yarn') {
+    run('npm install -g yarn');
   }
-}
-
-// Check if pnpm is installed
-if (!commandExists('pnpm')) {
-  console.log('📦 Installing pnpm...');
-  run('npm install -g pnpm');
 }
 
 // Install dependencies
 console.log('📦 Installing dependencies...');
-run('pnpm install');
+run(getInstallCommand(pm));
 
 // Setup husky
 console.log('🐶 Setting up Husky...');
-run('pnpm prepare');
+run(`${runCmd} prepare`);
 
 // Create environment files
 console.log('🔐 Creating environment files...');
@@ -84,15 +88,15 @@ NODE_ENV=development
 
 // Build packages
 console.log('🔨 Building packages...');
-run('pnpm build');
+run(`${runCmd} build`);
 
 console.log('');
 console.log('✅ Setup complete!');
 console.log('');
 console.log('Available commands:');
-console.log('  pnpm dev          - Start development servers');
-console.log('  pnpm build        - Build all packages');
-console.log('  pnpm lint         - Run linting');
-console.log('  pnpm test         - Run tests');
-console.log('  pnpm docker:dev   - Start with Docker (dev)');
+console.log(`  ${runCmd} dev          - Start development servers`);
+console.log(`  ${runCmd} build        - Build all packages`);
+console.log(`  ${runCmd} lint         - Run linting`);
+console.log(`  ${runCmd} test         - Run tests`);
+console.log(`  ${runCmd} docker:dev   - Start with Docker (dev)`);
 console.log('');

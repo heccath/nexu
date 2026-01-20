@@ -105,3 +105,74 @@ export function log(message: string, type: 'info' | 'success' | 'warn' | 'error'
 
   console.log(`${colors[type](icons[type])} ${message}`);
 }
+
+export type PackageManager = 'npm' | 'yarn' | 'pnpm';
+
+/**
+ * Detect which package manager is being used in a project
+ */
+export function detectPackageManager(projectDir: string = process.cwd()): PackageManager {
+  // Check for lock files
+  if (fs.existsSync(path.join(projectDir, 'pnpm-lock.yaml'))) {
+    return 'pnpm';
+  }
+  if (fs.existsSync(path.join(projectDir, 'yarn.lock'))) {
+    return 'yarn';
+  }
+  if (fs.existsSync(path.join(projectDir, 'package-lock.json'))) {
+    return 'npm';
+  }
+
+  // Check packageManager field in package.json
+  const packageJsonPath = path.join(projectDir, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const pkg = fs.readJsonSync(packageJsonPath);
+      if (pkg.packageManager) {
+        if (pkg.packageManager.startsWith('pnpm')) return 'pnpm';
+        if (pkg.packageManager.startsWith('yarn')) return 'yarn';
+        if (pkg.packageManager.startsWith('npm')) return 'npm';
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  // Check npm_config_user_agent environment variable
+  const userAgent = process.env.npm_config_user_agent || '';
+  if (userAgent.includes('pnpm')) return 'pnpm';
+  if (userAgent.includes('yarn')) return 'yarn';
+
+  // Default to npm
+  return 'npm';
+}
+
+/**
+ * Get the run command for a package manager
+ */
+export function getRunCommand(pm: PackageManager): string {
+  switch (pm) {
+    case 'pnpm':
+      return 'pnpm';
+    case 'yarn':
+      return 'yarn';
+    case 'npm':
+    default:
+      return 'npm run';
+  }
+}
+
+/**
+ * Get the install command
+ */
+export function getInstallCommand(pm: PackageManager): string {
+  switch (pm) {
+    case 'pnpm':
+      return 'pnpm install';
+    case 'yarn':
+      return 'yarn install';
+    case 'npm':
+    default:
+      return 'npm install';
+  }
+}
