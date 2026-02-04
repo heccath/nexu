@@ -22,6 +22,7 @@ export const TEMPLATE_DIRS = {
 };
 
 export const SHARED_PACKAGES = [
+  'auth',
   'cache',
   'config',
   'constants',
