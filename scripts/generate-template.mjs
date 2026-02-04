@@ -103,6 +103,14 @@ for (const { src, dest } of dotfilesToRename) {
   }
 }
 
+// Create lint-staged config (simplified version without create-nexu filter)
+const lintStagedConfig = `module.exports = {
+  '*.{ts,tsx,js,jsx}': ['eslint --fix', 'prettier --write'],
+  '*.{json,md,yml,yaml}': ['prettier --write'],
+};
+`;
+fs.writeFileSync(path.join(TEMPLATE_DIR, 'lintstagedrc.cjs'), lintStagedConfig);
+
 // Update package.json with placeholder name
 const packageJsonPath = path.join(TEMPLATE_DIR, 'package.json');
 let packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');

@@ -162,9 +162,13 @@ export async function init(projectName: string | undefined, options: InitOptions
     const templateDir = getTemplateDir();
     fs.copySync(templateDir, projectDir);
 
-    // Rename dotfiles (npm doesn't publish .gitignore and .gitkeep files)
+    // Rename dotfiles (npm doesn't publish .gitignore, .gitkeep, .lintstagedrc files)
     const dotfilesToRename = [
       { src: path.join(projectDir, 'gitignore'), dest: path.join(projectDir, '.gitignore') },
+      {
+        src: path.join(projectDir, 'lintstagedrc.cjs'),
+        dest: path.join(projectDir, '.lintstagedrc.cjs'),
+      },
       {
         src: path.join(projectDir, 'apps', 'gitkeep'),
         dest: path.join(projectDir, 'apps', '.gitkeep'),
