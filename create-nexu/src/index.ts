@@ -33,6 +33,17 @@ program
     }
   });
 
+// Init command (explicit)
+program
+  .command('init [project-name]')
+  .description('Initialize a new Nexu monorepo project')
+  .option('-t, --template <template>', 'Template to use (default, minimal)', 'default')
+  .option('--skip-install', 'Skip dependency installation')
+  .option('--skip-git', 'Skip git initialization')
+  .action((projectName, options) => {
+    return init(projectName, options);
+  });
+
 // Update command
 program
   .command('update')

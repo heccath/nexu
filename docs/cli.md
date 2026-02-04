@@ -14,12 +14,14 @@ npm create nexu my-project
 
 ## Commandes
 
-### `create-nexu [project-name]`
+### `create-nexu [project-name]` / `create-nexu init [project-name]`
 
 Crée un nouveau projet Nexu.
 
 ```bash
+# Les deux syntaxes sont équivalentes
 npx create-nexu my-project
+npx create-nexu init my-project
 ```
 
 #### Options
@@ -35,6 +37,13 @@ npx create-nexu my-project
 ```bash
 # Projet standard
 npx create-nexu my-project
+
+# Avec la commande init explicite
+npx create-nexu init my-project
+
+# Initialiser dans le dossier courant
+npx create-nexu .
+npx create-nexu init .
 
 # Sans installation des dépendances
 npx create-nexu my-project --skip-install

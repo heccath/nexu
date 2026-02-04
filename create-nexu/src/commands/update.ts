@@ -686,6 +686,25 @@ export async function update(options: UpdateOptions): Promise<void> {
     cleanEmptyDirectories(projectDir);
   }
 
+  // Rename dotfiles (npm doesn't publish .gitignore and .gitkeep files)
+  const dotfilesToRename = [
+    { src: path.join(projectDir, 'gitignore'), dest: path.join(projectDir, '.gitignore') },
+    {
+      src: path.join(projectDir, 'apps', 'gitkeep'),
+      dest: path.join(projectDir, 'apps', '.gitkeep'),
+    },
+    {
+      src: path.join(projectDir, 'services', 'postgres', 'init', 'gitkeep'),
+      dest: path.join(projectDir, 'services', 'postgres', 'init', '.gitkeep'),
+    },
+  ];
+
+  for (const { src, dest } of dotfilesToRename) {
+    if (fs.existsSync(src)) {
+      fs.renameSync(src, dest);
+    }
+  }
+
   // Apply dependency changes
   if (selectedCategories.includes('dependencies') && dependencyChanges) {
     const templatePkgPath = path.join(templateDir, 'package.json');

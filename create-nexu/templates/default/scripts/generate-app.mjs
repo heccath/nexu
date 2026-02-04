@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import readline from 'readline';
-import { detectPackageManager, getRunCommand } from './lib/package-manager.mjs';
+import { detectPackageManager, getRunCommand, getInstallCommand } from './lib/package-manager.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +37,42 @@ const DOCKER_DIR = path.join(ROOT_DIR, 'docker');
 // Detect package manager
 const pm = detectPackageManager(ROOT_DIR);
 const runCmd = getRunCommand(pm);
+
+// Docker-specific helpers based on package manager
+function getDockerSetup(pm) {
+  switch (pm) {
+    case 'pnpm':
+      return {
+        enableCmd: 'RUN corepack enable && corepack prepare pnpm@9 --activate',
+        lockFile: 'pnpm-lock.yaml pnpm-workspace.yaml',
+        installCmd: 'RUN pnpm install --frozen-lockfile',
+        installProdCmd: 'RUN pnpm install --prod --frozen-lockfile',
+        runPrefix: 'pnpm',
+        buildCmd: 'pnpm turbo build',
+      };
+    case 'yarn':
+      return {
+        enableCmd: 'RUN corepack enable && corepack prepare yarn@4 --activate',
+        lockFile: 'yarn.lock',
+        installCmd: 'RUN yarn install --frozen-lockfile',
+        installProdCmd: 'RUN yarn install --production --frozen-lockfile',
+        runPrefix: 'yarn',
+        buildCmd: 'yarn turbo build',
+      };
+    case 'npm':
+    default:
+      return {
+        enableCmd: '# Using npm (default)',
+        lockFile: 'package-lock.json',
+        installCmd: 'RUN npm ci',
+        installProdCmd: 'RUN npm ci --omit=dev',
+        runPrefix: 'npm run',
+        buildCmd: 'npm run turbo build',
+      };
+  }
+}
+
+const docker = getDockerSetup(pm);
 
 // Framework configurations
 const FRAMEWORKS = {
@@ -166,15 +202,15 @@ const FRAMEWORKS = {
 const DOCKERFILES = {
   nextjs: (appName, port) => `# ====== Base ======
 FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9 --activate
+${docker.enableCmd}
 WORKDIR /app
 
 # ====== Dependencies ======
 FROM base AS deps
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY ${docker.lockFile} package.json ./
 COPY apps/${appName}/package.json ./apps/${appName}/
 COPY packages/*/package.json ./packages/
-RUN pnpm install --frozen-lockfile
+${docker.installCmd}
 
 # ====== Development ======
 FROM base AS development
@@ -184,7 +220,7 @@ COPY . .
 WORKDIR /app/apps/${appName}
 ENV PORT=${port}
 EXPOSE ${port}
-CMD ["pnpm", "dev"]
+CMD ["${docker.runPrefix}", "dev"]
 
 # ====== Builder ======
 FROM base AS builder
@@ -192,7 +228,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/${appName}/node_modules ./apps/${appName}/node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm turbo build --filter=@repo/${appName}
+RUN ${docker.buildCmd} --filter=@repo/${appName}
 
 # ====== Production ======
 FROM node:20-alpine AS production
@@ -215,15 +251,15 @@ CMD ["node", "server.js"]
 
   vite: (appName, port) => `# ====== Base ======
 FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9 --activate
+${docker.enableCmd}
 WORKDIR /app
 
 # ====== Dependencies ======
 FROM base AS deps
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY ${docker.lockFile} package.json ./
 COPY apps/${appName}/package.json ./apps/${appName}/
 COPY packages/*/package.json ./packages/
-RUN pnpm install --frozen-lockfile
+${docker.installCmd}
 
 # ====== Development ======
 FROM base AS development
@@ -232,14 +268,14 @@ COPY --from=deps /app/apps/${appName}/node_modules ./apps/${appName}/node_module
 COPY . .
 WORKDIR /app/apps/${appName}
 EXPOSE ${port}
-CMD ["pnpm", "dev", "--host"]
+CMD ["${docker.runPrefix}", "dev", "--host"]
 
 # ====== Builder ======
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/${appName}/node_modules ./apps/${appName}/node_modules
 COPY . .
-RUN pnpm turbo build --filter=@repo/${appName}
+RUN ${docker.buildCmd} --filter=@repo/${appName}
 
 # ====== Production ======
 FROM nginx:alpine AS production
@@ -251,15 +287,15 @@ CMD ["nginx", "-g", "daemon off;"]
 
   nuxt: (appName, port) => `# ====== Base ======
 FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9 --activate
+${docker.enableCmd}
 WORKDIR /app
 
 # ====== Dependencies ======
 FROM base AS deps
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY ${docker.lockFile} package.json ./
 COPY apps/${appName}/package.json ./apps/${appName}/
 COPY packages/*/package.json ./packages/
-RUN pnpm install --frozen-lockfile
+${docker.installCmd}
 
 # ====== Development ======
 FROM base AS development
@@ -269,14 +305,14 @@ COPY . .
 WORKDIR /app/apps/${appName}
 ENV PORT=${port}
 EXPOSE ${port}
-CMD ["pnpm", "dev"]
+CMD ["${docker.runPrefix}", "dev"]
 
 # ====== Builder ======
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/${appName}/node_modules ./apps/${appName}/node_modules
 COPY . .
-RUN pnpm turbo build --filter=@repo/${appName}
+RUN ${docker.buildCmd} --filter=@repo/${appName}
 
 # ====== Production ======
 FROM node:20-alpine AS production
@@ -292,15 +328,15 @@ CMD ["node", "server/index.mjs"]
 
   node: (appName, port) => `# ====== Base ======
 FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9 --activate
+${docker.enableCmd}
 WORKDIR /app
 
 # ====== Dependencies ======
 FROM base AS deps
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY ${docker.lockFile} package.json ./
 COPY apps/${appName}/package.json ./apps/${appName}/
 COPY packages/*/package.json ./packages/
-RUN pnpm install --frozen-lockfile
+${docker.installCmd}
 
 # ====== Development ======
 FROM base AS development
@@ -310,17 +346,18 @@ COPY . .
 WORKDIR /app/apps/${appName}
 ENV PORT=${port}
 EXPOSE ${port}
-CMD ["pnpm", "dev"]
+CMD ["${docker.runPrefix}", "dev"]
 
 # ====== Builder ======
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/${appName}/node_modules ./apps/${appName}/node_modules
 COPY . .
-RUN pnpm turbo build --filter=@repo/${appName}
+RUN ${docker.buildCmd} --filter=@repo/${appName}
 
 # ====== Production ======
 FROM node:20-alpine AS production
+${docker.enableCmd}
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=${port}
@@ -328,7 +365,7 @@ ENV PORT=${port}
 COPY --from=builder /app/apps/${appName}/dist ./dist
 COPY --from=builder /app/apps/${appName}/package.json ./
 
-RUN npm install --omit=dev
+${docker.installProdCmd}
 
 EXPOSE ${port}
 CMD ["node", "dist/index.js"]
@@ -736,9 +773,11 @@ async function main() {
   if (!config.createCommand) {
     log.info('Installing dependencies...');
     try {
-      run(`${pm} install`, ROOT_DIR);
+      const installCmd = getInstallCommand(pm);
+      log.info(`> ${installCmd}`);
+      run(installCmd, ROOT_DIR);
     } catch (error) {
-      log.warn('Failed to install dependencies. Run install manually.');
+      log.warn(`Failed to install dependencies. Run "${getInstallCommand(pm)}" manually.`);
     }
   }
 

@@ -72,7 +72,8 @@ function copyDir(src, dest, excludes = []) {
     // Special handling for apps directory - only copy structure, not contents
     if (relativePath === 'apps') {
       fs.mkdirSync(destPath, { recursive: true });
-      fs.writeFileSync(path.join(destPath, '.gitkeep'), '');
+      // Use 'gitkeep' instead of '.gitkeep' because npm doesn't publish dotfiles
+      fs.writeFileSync(path.join(destPath, 'gitkeep'), '');
       continue;
     }
 
@@ -87,6 +88,20 @@ function copyDir(src, dest, excludes = []) {
 
 // Copy files
 copyDir(ROOT_DIR, TEMPLATE_DIR, EXCLUDES);
+
+// Rename dotfiles (npm doesn't publish .gitignore and .gitkeep files)
+const dotfilesToRename = [
+  { src: '.gitignore', dest: 'gitignore' },
+  { src: path.join('services', 'postgres', 'init', '.gitkeep'), dest: path.join('services', 'postgres', 'init', 'gitkeep') },
+];
+
+for (const { src, dest } of dotfilesToRename) {
+  const srcPath = path.join(TEMPLATE_DIR, src);
+  const destPath = path.join(TEMPLATE_DIR, dest);
+  if (fs.existsSync(srcPath)) {
+    fs.renameSync(srcPath, destPath);
+  }
+}
 
 // Update package.json with placeholder name
 const packageJsonPath = path.join(TEMPLATE_DIR, 'package.json');

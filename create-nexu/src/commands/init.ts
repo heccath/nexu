@@ -161,6 +161,26 @@ export async function init(projectName: string | undefined, options: InitOptions
   try {
     const templateDir = getTemplateDir();
     fs.copySync(templateDir, projectDir);
+
+    // Rename dotfiles (npm doesn't publish .gitignore and .gitkeep files)
+    const dotfilesToRename = [
+      { src: path.join(projectDir, 'gitignore'), dest: path.join(projectDir, '.gitignore') },
+      {
+        src: path.join(projectDir, 'apps', 'gitkeep'),
+        dest: path.join(projectDir, 'apps', '.gitkeep'),
+      },
+      {
+        src: path.join(projectDir, 'services', 'postgres', 'init', 'gitkeep'),
+        dest: path.join(projectDir, 'services', 'postgres', 'init', '.gitkeep'),
+      },
+    ];
+
+    for (const { src, dest } of dotfilesToRename) {
+      if (fs.existsSync(src)) {
+        fs.renameSync(src, dest);
+      }
+    }
+
     spinner.succeed('Template copied');
   } catch (error) {
     spinner.fail('Failed to copy template');
@@ -229,6 +249,7 @@ export async function init(projectName: string | undefined, options: InitOptions
     fs.removeSync(path.join(projectDir, 'pnpm-workspace.yaml'));
     fs.removeSync(path.join(projectDir, '.npmrc'));
     const updatedPkg = fs.readJsonSync(packageJsonPath);
+    updatedPkg.private = true; // Required for yarn workspaces
     updatedPkg.workspaces = ['apps/*', 'packages/*'];
     fs.writeJsonSync(packageJsonPath, updatedPkg, { spaces: 2 });
   } else if (packageManager === 'npm') {
@@ -236,6 +257,7 @@ export async function init(projectName: string | undefined, options: InitOptions
     fs.removeSync(path.join(projectDir, 'pnpm-workspace.yaml'));
     fs.removeSync(path.join(projectDir, '.npmrc'));
     const updatedPkg = fs.readJsonSync(packageJsonPath);
+    updatedPkg.private = true; // Required for npm workspaces
     updatedPkg.workspaces = ['apps/*', 'packages/*'];
     fs.writeJsonSync(packageJsonPath, updatedPkg, { spaces: 2 });
   }
