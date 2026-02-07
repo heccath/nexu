@@ -174,6 +174,30 @@ export function getRunCommand(pm: PackageManager): string {
 }
 
 /**
+ * Get the installed version of a package manager
+ */
+export function getPackageManagerVersion(pm: PackageManager): string | null {
+  try {
+    const version = execSync(`${pm} --version`, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+    return version;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the packageManager field value (e.g. "pnpm@9.15.0")
+ */
+export function getPackageManagerField(pm: PackageManager): string | null {
+  const version = getPackageManagerVersion(pm);
+  if (!version) return null;
+  return `${pm}@${version}`;
+}
+
+/**
  * Get the install command
  */
 export function getInstallCommand(pm: PackageManager): string {

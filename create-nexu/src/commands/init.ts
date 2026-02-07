@@ -7,7 +7,14 @@ import inquirer from 'inquirer';
 import ora from 'ora';
 
 import { SHARED_PACKAGES } from '../utils/constants.js';
-import { exec, execInherit, log, getInstallCommand, getRunCommand } from '../utils/helpers.js';
+import {
+  exec,
+  execInherit,
+  getInstallCommand,
+  getPackageManagerField,
+  getRunCommand,
+  log,
+} from '../utils/helpers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -192,13 +199,18 @@ export async function init(projectName: string | undefined, options: InitOptions
     process.exit(1);
   }
 
-  // Update package.json with project name and remove packageManager field
+  // Update package.json with project name and set packageManager field
   const packageJsonPath = path.join(projectDir, 'package.json');
   const packageJson = fs.readJsonSync(packageJsonPath);
   packageJson.name = projectName;
 
-  // Remove the packageManager field to let users use any package manager
-  delete packageJson.packageManager;
+  // Set the packageManager field to the chosen package manager's version
+  const pmField = getPackageManagerField(packageManager!);
+  if (pmField) {
+    packageJson.packageManager = pmField;
+  } else {
+    delete packageJson.packageManager;
+  }
 
   // Remove unselected features from package.json
   if (!features.includes('changesets')) {
