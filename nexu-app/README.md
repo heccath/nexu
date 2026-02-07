@@ -1,4 +1,4 @@
-# create-nexu
+# nexu-app
 
 CLI pour créer et mettre à jour des projets Nexu monorepo.
 
@@ -6,28 +6,28 @@ CLI pour créer et mettre à jour des projets Nexu monorepo.
 
 ```bash
 # Pas besoin d'installer, utiliser directement avec npx
-npx create-nexu init my-project
+npx nexu-app init my-project
 
 # Ou installer globalement
-npm install -g create-nexu
+npm install -g nexu-app
 ```
 
 ## Commandes
 
-### `create-nexu init [project-name]`
+### `nexu-app init [project-name]`
 
 Crée un nouveau projet Nexu monorepo.
 
 ```bash
 # Interactif
-npx create-nexu init
+npx nexu-app init
 
 # Avec nom de projet
-npx create-nexu init my-app
+npx nexu-app init my-app
 
 # Options
-npx create-nexu init my-app --skip-install  # Ne pas installer les dépendances
-npx create-nexu init my-app --skip-git      # Ne pas initialiser git
+npx nexu-app init my-app --skip-install  # Ne pas installer les dépendances
+npx nexu-app init my-app --skip-git      # Ne pas initialiser git
 ```
 
 Le wizard interactif permet de:
@@ -35,41 +35,41 @@ Le wizard interactif permet de:
 - Choisir les packages à inclure
 - Sélectionner les fonctionnalités (services Docker, workflows, etc.)
 
-### `create-nexu update`
+### `nexu-app update`
 
 Met à jour un projet existant avec les dernières fonctionnalités.
 
 ```bash
 # Mettre à jour tout
-npx create-nexu update
+npx nexu-app update
 
 # Mettre à jour seulement les packages
-npx create-nexu update --packages
+npx nexu-app update --packages
 
 # Mettre à jour seulement les configs
-npx create-nexu update --config
+npx nexu-app update --config
 
 # Mettre à jour seulement les workflows
-npx create-nexu update --workflows
+npx nexu-app update --workflows
 
 # Mettre à jour seulement les services Docker
-npx create-nexu update --services
+npx nexu-app update --services
 
 # Voir ce qui serait mis à jour sans faire de changements
-npx create-nexu update --dry-run
+npx nexu-app update --dry-run
 ```
 
-### `create-nexu add <component>`
+### `nexu-app add <component>`
 
 Ajoute un composant à un projet existant.
 
 ```bash
 # Ajouter un package
-npx create-nexu add package
-npx create-nexu add package --name logger
+npx nexu-app add package
+npx nexu-app add package --name logger
 
 # Ajouter les services Docker
-npx create-nexu add service
+npx nexu-app add service
 ```
 
 ## Workflow typique
@@ -78,7 +78,7 @@ npx create-nexu add service
 
 ```bash
 # 1. Créer le projet
-npx create-nexu init my-app
+npx nexu-app init my-app
 cd my-app
 
 # 2. Créer une application
@@ -96,7 +96,7 @@ pnpm dev
 cd my-existing-project
 
 # 2. Mettre à jour
-npx create-nexu update
+npx nexu-app update
 
 # 3. Installer les nouvelles dépendances
 pnpm install
@@ -106,10 +106,10 @@ pnpm install
 
 ```bash
 # Ajouter un nouveau package partagé
-npx create-nexu add package
+npx nexu-app add package
 
 # Ajouter les services Docker
-npx create-nexu add service
+npx nexu-app add service
 ```
 
 ## Packages disponibles
@@ -143,7 +143,7 @@ npx create-nexu add service
 Pour publier une nouvelle version:
 
 ```bash
-cd packages/create-nexu
+cd packages/nexu-app
 pnpm build
 npm publish
 ```

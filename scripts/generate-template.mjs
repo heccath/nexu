@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 // Directories
 const ROOT_DIR = path.resolve(__dirname, '..');
-const TEMPLATE_DIR = path.join(ROOT_DIR, 'create-nexu', 'templates', 'default');
+const TEMPLATE_DIR = path.join(ROOT_DIR, 'nexu-app', 'templates', 'default');
 
 // Files/directories to exclude from template
 const EXCLUDES = [
@@ -23,7 +23,7 @@ const EXCLUDES = [
   'coverage',
   '.next',
   'pnpm-lock.yaml',
-  'create-nexu',
+  'nexu-app',
   '.claude',
   'README.md',
   '.lintstagedrc.cjs',
@@ -103,7 +103,7 @@ for (const { src, dest } of dotfilesToRename) {
   }
 }
 
-// Create lint-staged config (simplified version without create-nexu filter)
+// Create lint-staged config (simplified version without nexu-app filter)
 const lintStagedConfig = `module.exports = {
   '*.{ts,tsx,js,jsx}': ['eslint --fix', 'prettier --write'],
   '*.{json,md,yml,yaml}': ['prettier --write'],
@@ -117,19 +117,19 @@ let packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');
 packageJsonContent = packageJsonContent.replace('"name": "nexu"', '"name": "{{PROJECT_NAME}}"');
 fs.writeFileSync(packageJsonPath, packageJsonContent);
 
-// Remove create-nexu from pnpm-workspace.yaml in template
+// Remove nexu-app from pnpm-workspace.yaml in template
 const workspacePath = path.join(TEMPLATE_DIR, 'pnpm-workspace.yaml');
 if (fs.existsSync(workspacePath)) {
   let workspaceContent = fs.readFileSync(workspacePath, 'utf-8');
-  workspaceContent = workspaceContent.replace(/\s*- 'create-nexu'\n?/g, '\n');
+  workspaceContent = workspaceContent.replace(/\s*- 'nexu-app'\n?/g, '\n');
   fs.writeFileSync(workspacePath, workspaceContent);
 }
 
-// Remove create-nexu from .eslintrc.js ignorePatterns in template
+// Remove nexu-app from .eslintrc.js ignorePatterns in template
 const eslintPath = path.join(TEMPLATE_DIR, '.eslintrc.js');
 if (fs.existsSync(eslintPath)) {
   let eslintContent = fs.readFileSync(eslintPath, 'utf-8');
-  eslintContent = eslintContent.replace(/\s*'create-nexu',?\n?/g, '\n');
+  eslintContent = eslintContent.replace(/\s*'nexu-app',?\n?/g, '\n');
   fs.writeFileSync(eslintPath, eslintContent);
 }
 

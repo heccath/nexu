@@ -383,7 +383,7 @@ pnpm generate:template
 
 ### Fonctionnement
 
-1. **Supprime** l'ancien template dans `create-nexu/templates/default/`
+1. **Supprime** l'ancien template dans `nexu-app/templates/default/`
 2. **Copie** les fichiers du monorepo
 3. **Exclut** les fichiers non nécessaires
 4. **Modifie** le `package.json` avec un placeholder
@@ -400,7 +400,7 @@ pnpm generate:template
 - `coverage`
 - `.next`
 - `pnpm-lock.yaml`
-- `create-nexu` (le CLI lui-même)
+- `nexu-app` (le CLI lui-même)
 - `.claude`
 - `README.md`
 - `.lintstagedrc.cjs`
@@ -408,15 +408,15 @@ pnpm generate:template
 ### Modifications automatiques
 
 1. **package.json**: `"name": "nexu"` → `"name": "{{PROJECT_NAME}}"`
-2. **pnpm-workspace.yaml**: Supprime `- 'create-nexu'`
-3. **eslintrc.js**: Supprime `'create-nexu'` des ignorePatterns
+2. **pnpm-workspace.yaml**: Supprime `- 'nexu-app'`
+3. **eslintrc.js**: Supprime `'nexu-app'` des ignorePatterns
 4. **Scripts supprimés**: `generate:template`, `publish:cli`
 
 ---
 
 ## publish-cli.mjs
 
-Script pour publier le CLI create-nexu sur npm.
+Script pour publier le CLI nexu-app sur npm.
 
 ### Usage
 

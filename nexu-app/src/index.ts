@@ -14,7 +14,7 @@ const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 
 const program = new Command();
 
 program
-  .name('create-nexu')
+  .name('nexu-app')
   .description('CLI to create and update Nexu monorepo projects')
   .version(packageJson.version);
 

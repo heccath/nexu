@@ -1,12 +1,12 @@
 {
-  "name": "create-nexu",
-  "version": "1.4.4",
+  "name": "nexu-app",
+  "version": "2.0.0",
   "description": "CLI to create and update Nexu monorepo projects",
   "author": "Nexu Team",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "create-nexu": "./dist/index.js"
+    "nexu-app": "./dist/index.js"
   },
   "publishConfig": {
     "access": "public"

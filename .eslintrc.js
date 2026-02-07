@@ -63,6 +63,6 @@ module.exports = {
     '.eslintrc.js',
     '.lintstagedrc.cjs',
     'commitlint.config.js',
-    'create-nexu',
+    'nexu-app',
   ],
 };

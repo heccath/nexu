@@ -284,7 +284,7 @@ export async function init(projectName: string | undefined, options: InitOptions
     try {
       exec('git init', projectDir);
       exec('git add .', projectDir);
-      exec('git commit -m "Initial commit from create-nexu"', projectDir);
+      exec('git commit -m "Initial commit from nexu-app"', projectDir);
       gitSpinner.succeed('Git repository initialized');
     } catch {
       gitSpinner.warn('Failed to initialize git repository');
@@ -320,6 +320,6 @@ export async function init(projectName: string | undefined, options: InitOptions
   console.log('\nTo create an app:');
   console.log(chalk.cyan(`  ${runCmd} generate:app <name> <port>`));
   console.log('\nTo update with latest features:');
-  console.log(chalk.cyan('  npx create-nexu update'));
+  console.log(chalk.cyan('  npx nexu-app update'));
   console.log('');
 }

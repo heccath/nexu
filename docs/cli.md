@@ -1,27 +1,27 @@
-# CLI create-nexu
+# CLI nexu-app
 
-`create-nexu` est un outil en ligne de commande pour créer et gérer des projets monorepo Nexu.
+`nexu-app` est un outil en ligne de commande pour créer et gérer des projets monorepo Nexu.
 
 ## Installation
 
 ```bash
 # Créer un nouveau projet (installation automatique via npx)
-npx create-nexu my-project
+npx nexu-app my-project
 
 # Ou via npm create
-npm create nexu my-project
+npx nexu-app my-project
 ```
 
 ## Commandes
 
-### `create-nexu [project-name]` / `create-nexu init [project-name]`
+### `nexu-app [project-name]` / `nexu-app init [project-name]`
 
 Crée un nouveau projet Nexu.
 
 ```bash
 # Les deux syntaxes sont équivalentes
-npx create-nexu my-project
-npx create-nexu init my-project
+npx nexu-app my-project
+npx nexu-app init my-project
 ```
 
 #### Options
@@ -36,32 +36,32 @@ npx create-nexu init my-project
 
 ```bash
 # Projet standard
-npx create-nexu my-project
+npx nexu-app my-project
 
 # Avec la commande init explicite
-npx create-nexu init my-project
+npx nexu-app init my-project
 
 # Initialiser dans le dossier courant
-npx create-nexu .
-npx create-nexu init .
+npx nexu-app .
+npx nexu-app init .
 
 # Sans installation des dépendances
-npx create-nexu my-project --skip-install
+npx nexu-app my-project --skip-install
 
 # Sans initialisation Git
-npx create-nexu my-project --skip-git
+npx nexu-app my-project --skip-git
 
 # Les deux
-npx create-nexu my-project --skip-install --skip-git
+npx nexu-app my-project --skip-install --skip-git
 ```
 
-### `create-nexu update`
+### `nexu-app update`
 
 Met à jour un projet Nexu existant avec les dernières fonctionnalités du template.
 
 ```bash
 cd my-project
-npx create-nexu update
+npx nexu-app update
 ```
 
 #### Options
@@ -105,19 +105,19 @@ npx create-nexu update
 
 ```bash
 # Mise à jour complète avec prévisualisation
-npx create-nexu update --preview
+npx nexu-app update --preview
 
 # Mise à jour des packages partagés uniquement
-npx create-nexu update --packages
+npx nexu-app update --packages
 
 # Mise à jour des configs et workflows
-npx create-nexu update --config --workflows
+npx nexu-app update --config --workflows
 
 # Simulation (voir sans appliquer)
-npx create-nexu update --dry-run
+npx nexu-app update --dry-run
 
 # Mise à jour des dépendances uniquement
-npx create-nexu update --dependencies
+npx nexu-app update --dependencies
 ```
 
 #### Catégories de fichiers
@@ -131,13 +131,13 @@ npx create-nexu update --dependencies
 | `scripts`   | `scripts/**/*`                                           |
 | `docker`    | `docker/**/*`                                            |
 
-### `create-nexu add <component>`
+### `nexu-app add <component>`
 
 Ajoute un composant au projet.
 
 ```bash
-npx create-nexu add package
-npx create-nexu add service
+npx nexu-app add package
+npx nexu-app add service
 ```
 
 #### Composants disponibles
@@ -157,13 +157,13 @@ npx create-nexu add service
 
 ```bash
 # Ajouter un package (interactif)
-npx create-nexu add package
+npx nexu-app add package
 
 # Ajouter un package avec un nom
-npx create-nexu add package --name my-utils
+npx nexu-app add package --name my-utils
 
 # Ajouter un service Docker
-npx create-nexu add service
+npx nexu-app add service
 ```
 
 ## Flux de travail typique
@@ -172,7 +172,7 @@ npx create-nexu add service
 
 ```bash
 # 1. Créer le projet
-npx create-nexu my-project
+npx nexu-app my-project
 
 # 2. Aller dans le projet
 cd my-project
@@ -191,10 +191,10 @@ pnpm dev
 cd my-project
 
 # 2. Prévisualiser les changements
-npx create-nexu update --preview
+npx nexu-app update --preview
 
 # 3. Appliquer les mises à jour souhaitées
-npx create-nexu update
+npx nexu-app update
 
 # 4. Vérifier que tout fonctionne
 pnpm build
@@ -205,10 +205,10 @@ pnpm test
 
 ```bash
 # Ajouter un nouveau package partagé
-npx create-nexu add package --name validators
+npx nexu-app add package --name validators
 
 # Ajouter un service Docker (Redis, etc.)
-npx create-nexu add service
+npx nexu-app add service
 ```
 
 ## Structure du template
@@ -244,7 +244,7 @@ template/
 ### Structure du code
 
 ```
-create-nexu/
+nexu-app/
 ├── src/
 │   ├── index.ts            # Point d'entrée
 │   ├── commands/
@@ -268,7 +268,7 @@ pnpm generate:template
 
 Ce script:
 
-1. Copie les fichiers du monorepo vers `create-nexu/templates/default/`
+1. Copie les fichiers du monorepo vers `nexu-app/templates/default/`
 2. Exclut `node_modules`, `.git`, `dist`, etc.
 3. Remplace le nom du projet par un placeholder
 4. Supprime les scripts spécifiques au développement du CLI

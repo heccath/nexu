@@ -9,7 +9,7 @@ nexu/
 ├── apps/                    # Applications
 ├── packages/                # Packages partagés
 ├── services/                # Services Docker externes
-├── create-nexu/             # CLI
+├── nexu-app/             # CLI
 ├── scripts/                 # Scripts de build/automation
 ├── docker/                  # Configuration Docker principale
 └── .github/                 # GitHub Actions workflows
@@ -93,12 +93,12 @@ services/
 - `search`: Elasticsearch
 - `all`: Tous les services
 
-### CLI (`create-nexu/`)
+### CLI (`nexu-app/`)
 
 Outil CLI pour créer et gérer des projets Nexu.
 
 ```
-create-nexu/
+nexu-app/
 ├── src/
 │   ├── index.ts             # Point d'entrée
 │   ├── commands/
@@ -182,7 +182,7 @@ create-nexu/
 packages:
   - 'apps/*'
   - 'packages/*'
-  - 'create-nexu'
+  - 'nexu-app'
 ```
 
 ### TypeScript

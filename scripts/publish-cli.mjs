@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 
 // Directories
 const ROOT_DIR = path.resolve(__dirname, '..');
-const CLI_DIR = path.join(ROOT_DIR, 'create-nexu');
+const CLI_DIR = path.join(ROOT_DIR, 'nexu-app');
 
 // Helper to run commands
 function run(cmd, options = {}) {
@@ -35,7 +35,7 @@ function prompt(question) {
 }
 
 async function main() {
-  console.log('📦 Publishing create-nexu...');
+  console.log('📦 Publishing nexu-app...');
   console.log('');
 
   // Step 1: Generate template
@@ -109,12 +109,12 @@ async function main() {
     console.log('6️⃣  Publishing to npm...');
     run('npm publish --access public', { cwd: CLI_DIR });
     console.log('');
-    console.log(`✅ Published create-nexu@${newVersion} successfully!`);
+    console.log(`✅ Published nexu-app@${newVersion} successfully!`);
     console.log('');
     console.log('Users can now run:');
     console.log('  npm create nexu my-app');
     console.log('  # or');
-    console.log('  npx create-nexu my-app');
+    console.log('  npx nexu-app my-app');
   } else {
     console.log('❌ Publish cancelled');
     // Revert version if changed

@@ -6,14 +6,14 @@ Monorepo moderne avec Turborepo, pnpm et Docker.
 
 ```bash
 # Créer un nouveau projet
-npm create nexu my-project
+npx nexu-app my-project
 cd my-project
 
 # Ou avec npx
-npx create-nexu my-project
+npx nexu-app my-project
 
 # Mettre à jour un projet existant
-npx create-nexu update
+npx nexu-app update
 ```
 
 ## Stack
@@ -53,7 +53,7 @@ nexu/
 │   ├── postgres/           # Config PostgreSQL
 │   ├── prometheus/         # Config Prometheus
 │   └── grafana/            # Config Grafana
-├── create-nexu/            # CLI create-nexu
+├── nexu-app/            # CLI nexu-app
 │   ├── src/                # Source du CLI
 │   └── templates/          # Templates du monorepo
 ├── docker/
@@ -65,7 +65,7 @@ nexu/
 
 ## Documentation
 
-- [Documentation CLI](docs/cli.md) - Guide d'utilisation du CLI create-nexu
+- [Documentation CLI](docs/cli.md) - Guide d'utilisation du CLI nexu-app
 - [Documentation Scripts](docs/scripts.md) - Scripts disponibles
 - [Architecture](docs/architecture.md) - Vue d'ensemble de l'architecture
 - [Contribution](docs/contributing.md) - Guide de contribution
@@ -351,33 +351,33 @@ if (REGEX.EMAIL.test(email)) {
 }
 ```
 
-## CLI create-nexu
+## CLI nexu-app
 
-Le CLI `create-nexu` permet de créer et mettre à jour des projets Nexu.
+Le CLI `nexu-app` permet de créer et mettre à jour des projets Nexu.
 
 ### Commandes principales
 
 ```bash
 # Créer un nouveau projet
-npx create-nexu my-project
-npx create-nexu my-project --skip-install  # Sans installation
-npx create-nexu my-project --skip-git      # Sans init git
+npx nexu-app my-project
+npx nexu-app my-project --skip-install  # Sans installation
+npx nexu-app my-project --skip-git      # Sans init git
 
 # Mettre à jour un projet existant
-npx create-nexu update
-npx create-nexu update --preview           # Prévisualiser les changements
-npx create-nexu update --dry-run           # Simulation
+npx nexu-app update
+npx nexu-app update --preview           # Prévisualiser les changements
+npx nexu-app update --dry-run           # Simulation
 
 # Mettre à jour des parties spécifiques
-npx create-nexu update --packages          # Packages partagés
-npx create-nexu update --config            # Fichiers de config
-npx create-nexu update --workflows         # GitHub workflows
-npx create-nexu update --scripts           # Scripts
-npx create-nexu update --dependencies      # Dépendances package.json
+npx nexu-app update --packages          # Packages partagés
+npx nexu-app update --config            # Fichiers de config
+npx nexu-app update --workflows         # GitHub workflows
+npx nexu-app update --scripts           # Scripts
+npx nexu-app update --dependencies      # Dépendances package.json
 
 # Ajouter des composants
-npx create-nexu add package                # Nouveau package partagé
-npx create-nexu add service                # Nouveau service Docker
+npx nexu-app add package                # Nouveau package partagé
+npx nexu-app add service                # Nouveau service Docker
 ```
 
 Voir [docs/cli.md](docs/cli.md) pour plus de détails.
