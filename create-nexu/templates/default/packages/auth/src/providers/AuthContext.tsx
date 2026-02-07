@@ -374,7 +374,13 @@ export function AuthProvider({ children, config }: AuthProviderProps) {
         clearInterval(refreshIntervalRef.current);
       }
     };
-  }, [config.autoRefresh, config.refreshThreshold, state.isAuthenticated, tokenManager, refreshSession]);
+  }, [
+    config.autoRefresh,
+    config.refreshThreshold,
+    state.isAuthenticated,
+    tokenManager,
+    refreshSession,
+  ]);
 
   const value: AuthContextValue = useMemo(
     () => ({

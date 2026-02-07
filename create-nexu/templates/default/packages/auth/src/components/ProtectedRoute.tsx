@@ -54,7 +54,7 @@ export function ProtectedRoute({
   // Check roles if specified
   if (roles && roles.length > 0) {
     const userRoles = (user?.metadata?.roles as string[]) || [];
-    const hasRole = roles.some((role) => userRoles.includes(role));
+    const hasRole = roles.some(role => userRoles.includes(role));
 
     if (!hasRole) {
       return fallback ? <>{fallback}</> : null;
@@ -64,9 +64,7 @@ export function ProtectedRoute({
   // Check permissions if specified
   if (permissions && permissions.length > 0) {
     const userPermissions = (user?.metadata?.permissions as string[]) || [];
-    const hasPermission = permissions.every((perm) =>
-      userPermissions.includes(perm)
-    );
+    const hasPermission = permissions.every(perm => userPermissions.includes(perm));
 
     if (!hasPermission) {
       return fallback ? <>{fallback}</> : null;

@@ -53,9 +53,7 @@ function matchPath(path: string, pattern: string): boolean {
   }
 
   // Wildcard in middle (e.g., '/api/*/users')
-  const regexPattern = pattern
-    .replace(/\*/g, '[^/]+')
-    .replace(/\//g, '\\/');
+  const regexPattern = pattern.replace(/\*/g, '[^/]+').replace(/\//g, '\\/');
   const regex = new RegExp(`^${regexPattern}$`);
   return regex.test(path);
 }
@@ -64,7 +62,7 @@ function matchPath(path: string, pattern: string): boolean {
  * Check if path matches any pattern in the list
  */
 function matchesAnyPattern(path: string, patterns: string[]): boolean {
-  return patterns.some((pattern) => matchPath(path, pattern));
+  return patterns.some(pattern => matchPath(path, pattern));
 }
 
 /**
@@ -75,9 +73,9 @@ function decodeToken(token: string): { exp?: number } | null {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
 
-    const payload = JSON.parse(
-      Buffer.from(parts[1], 'base64').toString('utf-8')
-    ) as { exp?: number };
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8')) as {
+      exp?: number;
+    };
     return payload;
   } catch {
     return null;

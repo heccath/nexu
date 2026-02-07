@@ -14,9 +14,7 @@ function decodeToken(token: string): TokenPayload | null {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
 
-    const payload = JSON.parse(
-      Buffer.from(parts[1], 'base64').toString('utf-8')
-    ) as TokenPayload;
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8')) as TokenPayload;
     return payload;
   } catch {
     return null;
@@ -206,7 +204,7 @@ export async function hasRole(roles: string[]): Promise<boolean> {
   if (!session) return false;
 
   const userRoles = (session.user.metadata?.roles as string[]) || [];
-  return roles.some((role) => userRoles.includes(role));
+  return roles.some(role => userRoles.includes(role));
 }
 
 /**
@@ -217,5 +215,5 @@ export async function hasPermission(permissions: string[]): Promise<boolean> {
   if (!session) return false;
 
   const userPermissions = (session.user.metadata?.permissions as string[]) || [];
-  return permissions.every((perm) => userPermissions.includes(perm));
+  return permissions.every(perm => userPermissions.includes(perm));
 }

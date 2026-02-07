@@ -78,7 +78,7 @@ export function SignUpForm({
 
   return (
     <div className={className}>
-      <form onSubmit={(e) => void handleSubmit(e)}>
+      <form onSubmit={e => void handleSubmit(e)}>
         {displayError && (
           <div role="alert" aria-live="polite">
             {displayError}
@@ -94,7 +94,7 @@ export function SignUpForm({
               type="text"
               autoComplete="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               disabled={isLoading}
               placeholder="John Doe"
             />
@@ -110,7 +110,7 @@ export function SignUpForm({
             autoComplete="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             disabled={isLoading}
             placeholder="you@example.com"
           />
@@ -125,7 +125,7 @@ export function SignUpForm({
             autoComplete="new-password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             disabled={isLoading}
             placeholder="••••••••"
           />
@@ -140,7 +140,7 @@ export function SignUpForm({
             autoComplete="new-password"
             required
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={e => setConfirmPassword(e.target.value)}
             disabled={isLoading}
             placeholder="••••••••"
           />

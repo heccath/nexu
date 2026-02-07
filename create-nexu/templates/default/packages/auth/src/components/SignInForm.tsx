@@ -67,7 +67,7 @@ export function SignInForm({
 
   return (
     <div className={className}>
-      <form onSubmit={(e) => void handleSubmit(e)}>
+      <form onSubmit={e => void handleSubmit(e)}>
         {displayError && (
           <div role="alert" aria-live="polite">
             {displayError}
@@ -83,7 +83,7 @@ export function SignInForm({
             autoComplete="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             disabled={isLoading}
             placeholder="you@example.com"
           />
@@ -98,7 +98,7 @@ export function SignInForm({
             autoComplete="current-password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             disabled={isLoading}
             placeholder="••••••••"
           />
@@ -110,16 +110,14 @@ export function SignInForm({
               <input
                 type="checkbox"
                 checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
+                onChange={e => setRemember(e.target.checked)}
                 disabled={isLoading}
               />
               <span>Remember me</span>
             </label>
           )}
 
-          {showForgotPassword && (
-            <a href={forgotPasswordUrl}>Forgot password?</a>
-          )}
+          {showForgotPassword && <a href={forgotPasswordUrl}>Forgot password?</a>}
         </div>
 
         <button type="submit" disabled={isLoading}>

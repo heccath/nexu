@@ -18,7 +18,14 @@ export interface AuthUser {
 // Provider Types
 // ============================================================================
 
-export type AuthProvider = 'email' | 'google' | 'github' | 'facebook' | 'apple' | 'twitter' | 'custom';
+export type AuthProvider =
+  | 'email'
+  | 'google'
+  | 'github'
+  | 'facebook'
+  | 'apple'
+  | 'twitter'
+  | 'custom';
 
 export interface OAuthProviderConfig {
   clientId: string;

@@ -8,13 +8,7 @@ export { AuthProvider, useAuthContext } from './providers';
 export { useAuth, useUser, useSession, useRequireAuth } from './hooks';
 
 // Components
-export {
-  SignInForm,
-  SignUpForm,
-  SocialButtons,
-  SocialButton,
-  ProtectedRoute,
-} from './components';
+export { SignInForm, SignUpForm, SocialButtons, SocialButton, ProtectedRoute } from './components';
 
 // Utilities
 export { TokenManager, createTokenManager } from './utils/token';

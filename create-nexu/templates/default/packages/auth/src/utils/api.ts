@@ -8,6 +8,7 @@ import type {
   SignUpCredentials,
   UpdatePasswordRequest,
 } from '../types';
+
 import { TokenManager } from './token';
 
 /**
@@ -33,10 +34,7 @@ export class AuthApiClient {
     }
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const token = this.tokenManager.getAccessToken();
 
@@ -80,7 +78,10 @@ export class AuthApiClient {
     }
   }
 
-  private createError(status: number, data: { message?: string; code?: string; details?: unknown }): AuthError {
+  private createError(
+    status: number,
+    data: { message?: string; code?: string; details?: unknown }
+  ): AuthError {
     let code: AuthErrorCode = 'UNKNOWN_ERROR';
 
     if (data.code) {
