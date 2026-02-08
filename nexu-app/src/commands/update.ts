@@ -13,6 +13,7 @@ import {
   log,
   detectPackageManager,
   getInstallCommand,
+  getPackageManagerField,
   execInherit,
 } from '../utils/helpers.js';
 
@@ -360,6 +361,29 @@ export async function update(options: UpdateOptions): Promise<void> {
   }
 
   const templateDir = getTemplateDir();
+
+  // Auto-fix: ensure packageManager field is present (required by turbo)
+  const projectPkgFixPath = path.join(projectDir, 'package.json');
+  const projectPkgFix = fs.readJsonSync(projectPkgFixPath);
+  if (!projectPkgFix.packageManager) {
+    const pm = detectPackageManager(projectDir);
+    const pmField = getPackageManagerField(pm);
+    if (pmField) {
+      projectPkgFix.packageManager = pmField;
+      fs.writeJsonSync(projectPkgFixPath, projectPkgFix, { spaces: 2 });
+      log(`Added packageManager field: ${pmField}`, 'info');
+    }
+  }
+
+  // Auto-fix: ensure husky pre-commit has COREPACK_ENABLE_STRICT=0
+  const preCommitFixPath = path.join(projectDir, '.husky', 'pre-commit');
+  if (fs.existsSync(preCommitFixPath)) {
+    const preCommitContent = fs.readFileSync(preCommitFixPath, 'utf-8');
+    if (!preCommitContent.includes('COREPACK_ENABLE_STRICT')) {
+      fs.writeFileSync(preCommitFixPath, `export COREPACK_ENABLE_STRICT=0\n${preCommitContent}`);
+      log('Fixed husky pre-commit hook (added COREPACK_ENABLE_STRICT=0)', 'info');
+    }
+  }
 
   // Determine what to update
   const updateAll =

@@ -204,7 +204,7 @@ export async function init(projectName: string | undefined, options: InitOptions
   const packageJson = fs.readJsonSync(packageJsonPath);
   packageJson.name = projectName;
 
-  // Set the packageManager field to the chosen package manager's version
+  // Set packageManager field (required by turbo)
   const pmField = getPackageManagerField(packageManager!);
   if (pmField) {
     packageJson.packageManager = pmField;
@@ -257,6 +257,14 @@ export async function init(projectName: string | undefined, options: InitOptions
   }
   if (!features.includes('vscode')) {
     fs.removeSync(path.join(projectDir, '.vscode'));
+  }
+
+  // Update .husky/pre-commit to use correct package manager and disable corepack strict mode
+  const preCommitPath = path.join(projectDir, '.husky', 'pre-commit');
+  if (fs.existsSync(preCommitPath)) {
+    const lintStagedCmd =
+      packageManager === 'npm' ? 'npx lint-staged' : `${packageManager!} lint-staged`;
+    fs.writeFileSync(preCommitPath, `export COREPACK_ENABLE_STRICT=0\n${lintStagedCmd}\n`);
   }
 
   // Create workspace config based on package manager
