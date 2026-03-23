@@ -22,11 +22,11 @@ const colors = {
 };
 
 const log = {
-  info: (msg) => console.log(`${colors.blue}ℹ${colors.reset} ${msg}`),
-  success: (msg) => console.log(`${colors.green}✓${colors.reset} ${msg}`),
-  warn: (msg) => console.log(`${colors.yellow}!${colors.reset} ${msg}`),
-  error: (msg) => console.log(`${colors.red}✗${colors.reset} ${msg}`),
-  title: (msg) => console.log(`\n${colors.bold}${colors.cyan}${msg}${colors.reset}\n`),
+  info: msg => console.log(`${colors.blue}ℹ${colors.reset} ${msg}`),
+  success: msg => console.log(`${colors.green}✓${colors.reset} ${msg}`),
+  warn: msg => console.log(`${colors.yellow}!${colors.reset} ${msg}`),
+  error: msg => console.log(`${colors.red}✗${colors.reset} ${msg}`),
+  title: msg => console.log(`\n${colors.bold}${colors.cyan}${msg}${colors.reset}\n`),
 };
 
 // Get directories
@@ -77,11 +77,12 @@ const docker = getDockerSetup(pm);
 // Framework configurations
 const FRAMEWORKS = {
   // Frontend frameworks
-  'next': {
+  next: {
     name: 'Next.js',
     type: 'frontend',
     defaultPort: 3000,
-    createCommand: (name) => `npx create-next-app@latest ${name} --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-${pm}`,
+    createCommand: name =>
+      `npx create-next-app@latest ${name} --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-${pm}`,
     devCommand: 'dev',
     buildCommand: 'build',
     startCommand: 'start',
@@ -92,7 +93,7 @@ const FRAMEWORKS = {
     name: 'Vite + React',
     type: 'frontend',
     defaultPort: 5173,
-    createCommand: (name) => `npm create vite@latest ${name} -- --template react-ts`,
+    createCommand: name => `npm create vite@latest ${name} -- --template react-ts`,
     devCommand: 'dev --host',
     buildCommand: 'build',
     startCommand: 'preview --host',
@@ -103,7 +104,7 @@ const FRAMEWORKS = {
     name: 'Vite + Vue',
     type: 'frontend',
     defaultPort: 5173,
-    createCommand: (name) => `npm create vite@latest ${name} -- --template vue-ts`,
+    createCommand: name => `npm create vite@latest ${name} -- --template vue-ts`,
     devCommand: 'dev --host',
     buildCommand: 'build',
     startCommand: 'preview --host',
@@ -114,18 +115,18 @@ const FRAMEWORKS = {
     name: 'Vite + Svelte',
     type: 'frontend',
     defaultPort: 5173,
-    createCommand: (name) => `npm create vite@latest ${name} -- --template svelte-ts`,
+    createCommand: name => `npm create vite@latest ${name} -- --template svelte-ts`,
     devCommand: 'dev --host',
     buildCommand: 'build',
     startCommand: 'preview --host',
     outputDir: 'dist',
     dockerfile: 'vite',
   },
-  'nuxt': {
+  nuxt: {
     name: 'Nuxt',
     type: 'frontend',
     defaultPort: 3000,
-    createCommand: (name) => `npx nuxi@latest init ${name}`,
+    createCommand: name => `npx nuxi@latest init ${name}`,
     devCommand: 'dev',
     buildCommand: 'build',
     startCommand: 'preview',
@@ -133,7 +134,7 @@ const FRAMEWORKS = {
     dockerfile: 'nuxt',
   },
   // Backend frameworks
-  'express': {
+  express: {
     name: 'Express.js',
     type: 'backend',
     defaultPort: 4000,
@@ -146,7 +147,7 @@ const FRAMEWORKS = {
     dependencies: ['express', 'cors', 'helmet'],
     devDependencies: ['@types/express', '@types/cors', 'tsx', 'typescript'],
   },
-  'fastify': {
+  fastify: {
     name: 'Fastify',
     type: 'backend',
     defaultPort: 4000,
@@ -159,7 +160,7 @@ const FRAMEWORKS = {
     dependencies: ['fastify', '@fastify/cors'],
     devDependencies: ['tsx', 'typescript'],
   },
-  'hono': {
+  hono: {
     name: 'Hono',
     type: 'backend',
     defaultPort: 4000,
@@ -172,18 +173,18 @@ const FRAMEWORKS = {
     dependencies: ['hono', '@hono/node-server'],
     devDependencies: ['tsx', 'typescript'],
   },
-  'nestjs': {
+  nestjs: {
     name: 'NestJS',
     type: 'backend',
     defaultPort: 4000,
-    createCommand: (name) => `npx @nestjs/cli@latest new ${name} --package-manager ${pm} --skip-git`,
+    createCommand: name => `npx @nestjs/cli@latest new ${name} --package-manager ${pm} --skip-git`,
     devCommand: 'start:dev',
     buildCommand: 'build',
     startCommand: 'start:prod',
     outputDir: 'dist',
     dockerfile: 'node',
   },
-  'empty': {
+  empty: {
     name: 'Empty (Node.js)',
     type: 'backend',
     defaultPort: 3000,
@@ -379,9 +380,9 @@ function question(prompt, defaultValue = '') {
     output: process.stdout,
   });
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const defaultText = defaultValue ? ` (${defaultValue})` : '';
-    rl.question(`${colors.cyan}?${colors.reset} ${prompt}${defaultText}: `, (answer) => {
+    rl.question(`${colors.cyan}?${colors.reset} ${prompt}${defaultText}: `, answer => {
       rl.close();
       resolve(answer || defaultValue);
     });
@@ -445,10 +446,7 @@ function createBackendApp(appDir, appName, framework, port) {
     }
   }
 
-  fs.writeFileSync(
-    path.join(appDir, 'package.json'),
-    JSON.stringify(packageJson, null, 2)
-  );
+  fs.writeFileSync(path.join(appDir, 'package.json'), JSON.stringify(packageJson, null, 2));
 
   // Create tsconfig.json
   const tsconfig = {
@@ -461,10 +459,7 @@ function createBackendApp(appDir, appName, framework, port) {
     exclude: ['node_modules', 'dist'],
   };
 
-  fs.writeFileSync(
-    path.join(appDir, 'tsconfig.json'),
-    JSON.stringify(tsconfig, null, 2)
-  );
+  fs.writeFileSync(path.join(appDir, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2));
 
   // Create main file based on framework
   let mainFile = '';
@@ -687,6 +682,42 @@ async function main() {
 
   const APP_DIR = path.join(APPS_DIR, appName);
 
+  // Load ports configuration
+  function loadPortsConfig() {
+    const portsPath = path.join(ROOT_DIR, 'apps', 'ports.json');
+    if (fs.existsSync(portsPath)) {
+      try {
+        return JSON.parse(fs.readFileSync(portsPath, 'utf-8'));
+      } catch {
+        log.warn('Failed to parse apps/ports.json');
+      }
+    }
+    return null;
+  }
+
+  // Get port for app (ports.json takes priority)
+  function getPort(appName, config) {
+    const portsConfig = loadPortsConfig();
+    if (portsConfig?.apps?.[appName]) {
+      return portsConfig.apps[appName];
+    }
+    return config?.defaultPort || 3000;
+  }
+
+  // Update ports.json with new app port
+  function updatePortsConfig(appName, appPort) {
+    const portsPath = path.join(ROOT_DIR, 'apps', 'ports.json');
+    let portsConfig = loadPortsConfig() || { apps: {} };
+
+    if (!portsConfig.apps) {
+      portsConfig = { apps: {} };
+    }
+
+    portsConfig.apps[appName] = appPort;
+    fs.writeFileSync(portsPath, JSON.stringify(portsConfig, null, 2));
+    log.success(`Updated apps/ports.json with ${appName}:${appPort}`);
+  }
+
   // Check if app already exists
   if (fs.existsSync(APP_DIR)) {
     log.error(`App '${appName}' already exists in apps/`);
@@ -712,9 +743,10 @@ async function main() {
 
   const config = FRAMEWORKS[framework];
 
-  // Get port
+  // Get port (ports.json takes priority over framework default)
   if (!port) {
-    port = await question('Port', config.defaultPort.toString());
+    const defaultPort = getPort(appName, config);
+    port = await question('Port', defaultPort.toString());
   }
   port = parseInt(port, 10);
 
@@ -769,6 +801,9 @@ async function main() {
   // Update main docker-compose
   updateMainCompose(appName);
 
+  // Update ports.json with the new app's port
+  updatePortsConfig(appName, port);
+
   // Install dependencies if it was a manual setup
   if (!config.createCommand) {
     log.info('Installing dependencies...');
@@ -802,7 +837,7 @@ async function main() {
   console.log('');
 }
 
-main().catch((error) => {
+main().catch(error => {
   log.error(error.message);
   process.exit(1);
 });
